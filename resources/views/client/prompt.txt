@@ -1,0 +1,860 @@
+﻿Now I want to create another folder, base on my assigned module I want to name my new file (client-ordo), I send to you my documents so that you have a guide until we finished the task and the requirements needed we directly make a backend into a database and xampp please help me step by step.
+ORDO
+
+Commercial Client Portal
+
+V1 Developer Mockup & Progressive Onboarding Specification
+
+FIRST DEVELOPMENT OBJECTIVE
+
+Build the complete visible client journey as a branded, responsive, clickable web mockup. Use static/sample data first. The interface must already be structured for later authentication, verification, subscription, module-entitlement, usage-limit, billing, and database logic.
+
+Framework
+
+Laravel
+
+Backend Language
+
+PHP
+
+Database
+
+MySQL
+
+Email Integration
+
+Brevo-ready
+
+Current Deliverable
+
+Web mockup first; business logic follows after UI approval
+
+1. Purpose and Scope
+
+This document defines the first client-facing commercial ORDO experience: account creation, login, password reset, immediate system access, 30-day free access, progressive account completion and verification, module visibility, JK&C client-service areas, and a centralized Settings architecture.
+
+V1 RULE
+
+Phase 1 is primarily visual and navigational. Pages, menus, states, buttons, forms, tabs, locks, progress indicators, and sample dashboards must work as a clickable mockup. Actual database-driven rules may be simulated, but the UI and routing must be ready for Phase 2 wiring.
+
+2. Development Phases
+
+Area
+
+Phase 1 Mockup
+
+Phase 2 Logic
+
+Authentication
+
+Login, register, forgot/reset password screens and simulated success states
+
+Real auth, sessions, email/mobile verification
+
+Account onboarding
+
+Progressive setup screens, 30-day countdown, sample verification states
+
+Persisted profile, KYC/verification workflow, reminders
+
+Business modules
+
+Static landing pages with sample data and lock/free/trial states
+
+Real module data and feature permissions
+
+Subscriptions
+
+Sample plans, free/trial labels, usage cards, upgrade UI
+
+Plan engine, entitlements, limits, billing integration
+
+Settings
+
+Complete centralized settings navigation with editable mock forms
+
+Persist all global/module configuration to MySQL
+
+3. Brand and UI Direction
+
+· Follow the existing ORDO brand guidelines, visual language, spacing, typography, buttons, tables, status badges, cards, icons, and navigation behavior.
+
+· The client portal must feel like ORDO, not like a separate microsite.
+
+· Desktop/web is the primary build, but pages must remain responsive on tablet and mobile.
+
+· Use clear business language. Avoid gaming terminology even where progress and incentives are used.
+
+· Do not copy Zoho visually. The supplied Zoho screenshots are only a reference for the concept of a clean centralized Settings hub.
+
+4. Locked Sidebar Architecture
+
+Group
+
+Menu
+
+Town Hall
+
+BUSINESS
+
+Entity & Governance
+
+Compliance
+
+Finance
+
+Human Capital
+
+Records
+
+Transmittals
+
+JK&C
+
+Announcements
+
+Engagements
+
+Subscriptions
+
+Support
+
+Activity & Reports
+
+Billing
+
+BOTTOM
+
+Settings
+
+5. Client Entry Journey
+
+1. User opens ORDO and chooses Log In or Create Account.
+
+2. New user completes short progressive registration screens.
+
+3. Account is created and the 30-day free-access period begins immediately.
+
+4. User enters Town Hall without waiting for full account verification.
+
+5. Town Hall shows account setup progress, verification status, free-access status, days remaining, and important JK&C announcements.
+
+6. During the first 30 days, all six Business modules are available for exploration.
+
+7. Account Profile and Account Verification may be completed during the 30-day period.
+
+8. Before the free period ends, the user is prompted to choose up to three Business modules to retain on the Free Plan.
+
+9. After 30 days, access may become limited depending on verification/subscription state. Existing data is retained and never deleted simply because access changes.
+
+6. Authentication Mockup
+6.1 Login
+
+· Email Address
+
+· Password
+
+· Remember Me
+
+· Forgot Password?
+
+· Log In
+
+· Create Account
+
+6.2 Create Account
+
+Use a short multi-step flow instead of one long form.
+
+Step 1 - About You
+
+· First Name *
+
+· Middle Name
+
+· Last Name *
+
+· Suffix
+
+· Date of Birth *
+
+· Gender (optional)
+
+· Country / Region *
+
+Step 2 - Contact
+
+· Email Address *
+
+· Mobile Number *
+
+· Simulated email/mobile verification state for Phase 1
+
+Step 3 - Security
+
+· Password *
+
+· Confirm Password *
+
+· Visible password requirements
+
+· Terms of Use and Privacy Policy acceptance
+
+6.3 Account Created
+
+WELCOME TO ORDO
+
+Your ORDO account has been created successfully. 30-Day Free Access Activated. [Enter ORDO]
+
+6.4 Forgot / Reset Password
+
+· Forgot Password: enter email and click Send Reset Instructions.
+
+· Check Your Email: show confirmation state.
+
+· Reset Password: New Password + Confirm New Password.
+
+· Success state: Password successfully changed. Return to Login.
+
+· Phase 2 connects the real email flow to Brevo.
+
+7. Town Hall
+
+Town Hall is the client's main landing page and should feel immediately useful even while most data is still static.
+
+Welcome / Account Status: Account name, current plan, verification status, 30-day status, days remaining.
+
+Account Setup Progress: Account Created, Contact Confirmed, Account Profile, Account Verification with a progress bar and Continue Setup action.
+
+Action Required: Items requiring client attention: setup, verification, required documents, approvals, support responses, or billing actions.
+
+Business Overview: Compact cards for subscribed/trial modules using sample data.
+
+Announcements: Latest important JK&C announcements; full archive remains under JK&C > Announcements.
+
+Upcoming: Deadlines, renewals, meetings, engagement milestones, billing dates.
+
+Recent Activity: Recent records, transmittals, compliance activity, JK&C service activity.
+
+8. Free Access, Module Selection and Limits
+8.1 First 30 Days
+
+30-DAY FREE ACCESS
+
+All six Business modules are available during the initial free period: Entity & Governance, Compliance, Finance, Human Capital, Records, and Transmittals.
+
+· Show the remaining days in Town Hall and Subscriptions.
+
+· Use Trial status on modules during this period.
+
+· The mockup should make all six modules clickable.
+
+· Static sample data should demonstrate how each module could look when active.
+
+8.2 Free Plan After Trial
+
+The Free Plan allows the client to select up to three Business modules.
+
+· Selected modules remain visible as Free/Active.
+
+· Unselected modules remain visible but display Locked / Upgrade Required.
+
+· Do not hide locked modules completely; the client should still see the available ORDO ecosystem.
+
+· Detailed child-feature limits per module will be defined later.
+
+8.3 Three Separate Entitlement Layers
+
+Entitlement
+
+What it controls
+
+Example
+
+Module Access
+
+Which top-level Business modules are available
+
+Compliance = Free; Finance = Locked
+
+Feature Access
+
+Which child features inside an active module are enabled
+
+Compliance Register = Enabled; Advanced Reports = Locked
+
+Usage Limits
+
+Capacity independent of module visibility
+
+Records 76/100; Users 1/1; Storage 320 MB/500 MB
+
+8.4 After 30 Days - Limited Access
+
+· Do not delete the account or stored records.
+
+· Existing records remain stored.
+
+· Some records/features/modules may become restricted or read-only according to future rules.
+
+· Town Hall, JK&C Announcements, Engagements, Subscriptions, Support, Billing, Settings, and Account Verification must remain reachable.
+
+· Show a clear Account Verification Required / Limited Access notice with a Continue Verification action.
+
+9. Centralized Settings Architecture
+
+IMPORTANT CHANGE
+
+All configuration belongs in one Settings hub. Account details, user details, verification, subscription/usage, security, policies, and every module's configurable options must be accessible from Settings. Do not scatter permanent configuration screens across the application.
+
+9.1 Settings Navigation
+
+ACCOUNT & ACCESS
+
+· My Account
+
+· Account Profile
+
+· Account Verification
+
+· Users & Access
+
+· Switch Account
+
+· Security
+
+SYSTEM
+
+· General
+
+· Notifications
+
+· Subscription & Usage
+
+· Policies & Terms
+
+MODULE SETTINGS
+
+· Entity & Governance
+
+· Compliance
+
+· Finance
+
+· Human Capital
+
+· Records
+
+· Transmittals
+
+9.2 My Account
+
+This is the logged-in user's personal account, not the legal/business account.
+
+· First Name, Middle Name, Last Name, Suffix
+
+· Date of Birth
+
+· Gender
+
+· Email Address
+
+· Mobile Number
+
+· Country / Region
+
+· Profile Photo / Avatar
+
+· Login and contact verification indicators
+
+· Change Password shortcut
+
+9.3 Account Profile
+
+Use neutral terminology. Do not call this Company Profile because an ORDO account may represent an individual, professional, practice, business, or organization.
+
+· Account Type: Individual, Professional / Practitioner, Sole Proprietorship, Partnership, OPC, Corporation, Association / Nonprofit, Cooperative, Government / Public Entity, Other
+
+· Registered / Legal Name *
+
+· Trade Name / Professional Name
+
+· TIN * (required)
+
+· Registration Number
+
+· Registration Authority
+
+· Date of Registration
+
+· Industry / Profession
+
+· Primary Address *
+
+· Business / Professional Email
+
+· Contact Number
+
+· Website
+
+· Logo
+
+· System-generated ORDO Account ID
+
+9.4 Relationship to Account
+
+· Self / Account Owner
+
+· Owner / Proprietor
+
+· Professional / Practitioner
+
+· Partner
+
+· Stockholder / Shareholder
+
+· Director / Trustee
+
+· President / CEO
+
+· Corporate Officer
+
+· Corporate Secretary
+
+· Authorized Representative
+
+· Accountant / Bookkeeper
+
+· Employee / Staff
+
+· Consultant / Adviser
+
+· Other
+
+Also ask separately: Are you authorized to administer this ORDO account? Yes / No.
+
+9.5 Account Verification
+
+· Verification Status: Not Started, In Progress, Submitted, Additional Information Required, Verified, Rejected
+
+· Required supporting-document upload area
+
+· Submission history
+
+· JK&C verification remarks / requested information
+
+· Submit / Resubmit action
+
+· Verification benefit status and Redeem action when applicable
+
+10. Module Settings - All Module Configuration Lives Here
+
+Each Business module may have operational pages in the main sidebar, but its configuration belongs under Settings > Module Settings.
+
+Entity & Governance
+
+· Entity profile defaults and corporate information mapping
+
+· Governance record/document types
+
+· Board and stockholder meeting settings
+
+· Resolution / certificate numbering formats
+
+· Director, officer and ownership classifications
+
+· Approval / sign-off options
+
+· Default statuses and labels
+
+· Module user permissions
+
+Compliance
+
+· Compliance categories and agencies
+
+· BIR / SEC / LGU / DOLE / SSS / PhilHealth / Pag-IBIG / Other agency setup
+
+· Compliance types and recurrence
+
+· Deadline and reminder rules
+
+· Status values
+
+· Approval workflow defaults
+
+· Escalation / reminder recipients
+
+· Module user permissions
+
+Finance
+
+· Currency settings
+
+· Tax settings
+
+· Chart of Accounts / finance categories
+
+· Transaction and request types
+
+· Numbering formats
+
+· Approval flows
+
+· Payment / billing defaults
+
+· Module user permissions
+
+Human Capital
+
+· Organization structure
+
+· Departments / units
+
+· Positions / job levels
+
+· Employment types
+
+· Work arrangements
+
+· Attendance / leave configuration
+
+· HR record/document types
+
+· Approval and reporting lines
+
+· Module user permissions
+
+Records
+
+· Record classifications and subclasses
+
+· Index codes
+
+· Source list
+
+· Record/document numbering
+
+· OCR field configuration
+
+· Tags and metadata defaults
+
+· Retention / archive settings
+
+· Storage and upload rules
+
+· Module user permissions
+
+Transmittals
+
+· Transmittal numbering
+
+· Incoming / outgoing types
+
+· Delivery / receipt methods
+
+· Approval workflow
+
+· Acknowledgment / proof-of-receipt settings
+
+· Attachment rules
+
+· Default statuses
+
+· Module user permissions
+
+SETTINGS UX RULE
+
+A module may contain a small 'Configure' or gear shortcut, but it should route the user to the corresponding Settings page. There should be one source of truth for configuration.
+
+11. Subscription & Usage in Settings
+
+· Current Plan: Trial / Free / Paid / Enterprise
+
+· Trial start and end date
+
+· Days remaining
+
+· Selected Free modules (maximum 3 after the trial)
+
+· Available / locked modules
+
+· Records used / allowance
+
+· Users used / allowance
+
+· Storage used / allowance
+
+· Add-ons
+
+· Upgrade / change plan actions
+
+· Subscription status
+
+· Benefit / free-record entitlement status
+
+12. Business Module Mockups
+
+Entity & Governance: Entity information, directors/officers, ownership, meetings, resolutions, corporate records.
+
+Compliance: Compliance status, upcoming deadlines, SEC, BIR, LGU, other compliance, recent filings.
+
+Finance: Financial summary, receivables, payables, expenses, finance records, recent transactions.
+
+Human Capital: Headcount, employees, attendance/leave summary, HR records, recent HR activity.
+
+Records: Total records, recent records, classification, search, upload, storage usage.
+
+Transmittals: Incoming, outgoing, pending receipt, received, recent transmittals.
+
+13. JK&C Client-Facing Pages
+Announcements
+
+Official JK&C announcements, memoranda, advisories, notices, regulatory updates, service/system updates, holiday advisories. Town Hall surfaces important/latest items.
+
+Engagements
+
+Professional engagements between the client and JK&C: engagement no., service, dates, scope, stage/status, documents, reports, related billing.
+
+Subscriptions
+
+ORDO/subscription access: plan, status, selected modules, usage, trial/free/paid states, upgrade UI.
+
+Support
+
+Questions, assistance, issues, concerns, service requests, billing concerns; list + new request form + statuses.
+
+Activity & Reports
+
+Two tabs: Activities performed by JK&C and formal Reports delivered to the client.
+
+Billing
+
+Account Summary, Invoices, Payments, Statement of Account.
+
+14. Suggested Web Routes
+
+ROUTES
+
+/login
+
+/register
+
+/forgot-password
+
+/reset-password
+
+/town-hall
+
+/entity-governance
+
+/compliance
+
+/finance
+
+/human-capital
+
+/records
+
+/transmittals
+
+/jkc/announcements
+
+/jkc/engagements
+
+/jkc/subscriptions
+
+/jkc/support
+
+/jkc/activity-reports
+
+/jkc/billing
+
+/settings
+
+/settings/my-account
+
+/settings/account-profile
+
+/settings/verification
+
+/settings/users-access
+
+/settings/switch-account
+
+/settings/security
+
+/settings/general
+
+/settings/notifications
+
+/settings/subscription-usage
+
+/settings/policies
+
+/settings/modules/entity-governance
+
+/settings/modules/compliance
+
+/settings/modules/finance
+
+/settings/modules/human-capital
+
+/settings/modules/records
+
+/settings/modules/transmittals
+
+15. Phase 2 Logic States to Prepare for Now
+
+Account Status: Active, Limited, Suspended, Closed
+
+Verification Status: Not Started, In Progress, Submitted, Additional Information Required, Verified, Rejected
+
+Subscription Status: Trial, Free, Active, Past Due, Suspended, Cancelled
+
+Module Entitlement: Trial, Free, Active, Limited, Locked
+
+Feature Entitlement: Enabled, Limited, Locked
+
+16. Mock Data Requirement
+
+· Do not leave pages empty. Use realistic sample information so management can judge spacing, hierarchy and usability.
+
+· Use one sample Account Profile, one logged-in user, a pending verification state, an active 30-day trial, sample module usage, announcements, engagement, invoice, support request, and reports.
+
+· Clearly mark sample/demo data in code/config, not necessarily in the visible interface.
+
+17. First Review Acceptance Checklist
+
+· ☐ Login page works as a mockup.
+
+· ☐ Create Account flow is fully clickable.
+
+· ☐ Account-created success state appears.
+
+· ☐ Forgot/Reset Password flow is clickable.
+
+· ☐ User can enter Town Hall immediately after account creation.
+
+· ☐ Town Hall displays 30-day access and account setup progress.
+
+· ☐ All six Business modules open with sample landing pages.
+
+· ☐ Trial / Free / Locked / Limited states are visually demonstrated.
+
+· ☐ JK&C Announcements, Engagements, Subscriptions, Support, Activity & Reports, and Billing open correctly.
+
+· ☐ Settings opens as a centralized settings hub.
+
+· ☐ My Account contains personal user information.
+
+· ☐ Account Profile uses neutral terminology and includes required TIN.
+
+· ☐ Relationship to Account and administrator authority are represented.
+
+· ☐ Account Verification screens and states are represented.
+
+· ☐ Subscription & Usage settings show modules, records, users and storage.
+
+· ☐ Every Business module has its own section under Settings > Module Settings.
+
+· ☐ Module configuration is not duplicated across unrelated pages.
+
+· ☐ Responsive sidebar and web layout work on desktop and mobile widths.
+
+· ☐ The entire mockup follows existing ORDO brand guidelines.
+
+18. Final V1 Development Goal
+
+MANAGEMENT REVIEW QUESTION
+
+After Phase 1, management should be able to use the mockup from Create Account to Town Hall, explore all client modules, open JK&C areas, and configure the entire account through Settings, then answer: "Is this how the ORDO Commercial Client experience should look and feel?"
+
+END OF SPECIFICATION
+
+This is my structure I used in my other file before, now I want to make this in my (client-portal) my new file
+Now, I open first my xampp and I already open my apache and my sql
+C:\USERS\MAR ROXAS\DESKTOP\CLIENT-PORTAL\RESOURCES\VIEWS
+│ welcome.blade.php
+│
+├───auth
+│ account-created.blade.php
+│ check-email.blade.php
+│ forgot-password.blade.php
+│ login.blade.php
+│ register.blade.php
+│ reset-password.blade.php
+│
+├───client
+│ Instructions.txt
+│ townhall.blade.php
+│
+├───components
+│ breadcrumbs.blade.php
+│ header.blade.php
+│ module-card.blade.php
+│ progress-card.blade.php
+│ settings-sidebar.blade.php
+│ sidebar.blade.php
+│ status-badge.blade.php
+│
+├───jkc
+│ activity-reports.blade.php
+│ announcements.blade.php
+│ billing.blade.php
+│ engagements.blade.php
+│ subscriptions.blade.php
+│ support.blade.php
+│
+├───layouts
+│ client.blade.php
+│ registration.blade.php
+│
+├───modules
+│ compliance.blade.php
+│ entity-governance.blade.php
+│ finance.blade.php
+│ human-capital.blade.php
+│ records.blade.php
+│ transmittals.blade.php
+│
+├───portal
+│ │ test.blade.php
+│ │ town-hall.blade.php
+│ │
+│ └───registration
+│ account.blade.php
+│ business.blade.php
+│ confirmation.blade.php
+│ contact.blade.php
+│ information.blade.php
+│ invited.blade.php
+│ personal.blade.php
+│ profession.blade.php
+│ profile.blade.php
+│ security.blade.php
+│ verification.blade.php
+│
+└───settings
+│ account-profile.blade.php
+│ general.blade.php
+│ index.blade.php
+│ my-account.blade.php
+│ notifications.blade.php
+│ policies.blade.php
+│ security.blade.php
+│ subscription-usage.blade.php
+│ switch-account.blade.php
+│ users-access.blade.php
+│ verification.blade.php
+│
+└───modules
+compliance.blade.php
+entity-governance.blade.php
+finance.blade.php
+human-capital.blade.php
+records.blade.php
+transmittals.blade.php
+
+C:\Users\Mar Roxas\Desktop\client-portal>
+My structure is already good now we have idea if we need to add or something to delete to that structure when I apply in my new folder base in the requirements I send to you.
