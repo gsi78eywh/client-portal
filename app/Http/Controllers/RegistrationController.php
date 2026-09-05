@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\UserProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
@@ -1378,9 +1379,7 @@ class RegistrationController extends Controller
             [
 
                 'password' =>
-                    Hash::make(
-                        $validated['password']
-                    ),
+                    $validated['password'],
 
                 'password_set' =>
                     true,
@@ -1955,6 +1954,9 @@ class RegistrationController extends Controller
         | START 30-DAY FREE ACCESS
         |--------------------------------------------------------------------------
         */
+
+        Auth::login($created['user']);
+        request()->session()->regenerate();
 
         session([
 
