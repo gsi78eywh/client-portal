@@ -103,6 +103,14 @@ class User extends Authenticatable
         return $this->hasOne(UserProfile::class);
     }
 
+    /**
+     * Support tickets opened by this user.
+     */
+    public function supportTickets(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SupportTicket::class);
+    }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -126,5 +134,43 @@ class User extends Authenticatable
             'is_administrator',
         ])
         ->withTimestamps();
+    }
+
+    /**
+     * Get the primary or first account the user belongs to.
+     */
+    public function primaryAccount(): ?Account
+    {
+        return $this->accounts()->first();
+    }
+
+    /**
+     * Get the current active account in session or primary account.
+     */
+    public function currentAccount(): ?Account
+    {
+        $sessionAccountId = session('client.account_id');
+        if ($sessionAccountId) {
+            $account = $this->accounts()->where('accounts.id', $sessionAccountId)->first();
+            if ($account) {
+                return $account;
+            }
+        }
+
+        return $this->primaryAccount();
+    }
+
+    /**
+     * Determine if the user is an administrator of the given account.
+     */
+    public function isAdmin(?Account $account = null): bool
+    {
+        $targetAccount = $account ?? $this->currentAccount();
+        if (!$targetAccount) {
+            return false;
+        }
+
+        $pivot = $this->accounts()->where('accounts.id', $targetAccount->id)->first()?->pivot;
+        return (bool) ($pivot?->is_administrator ?? false);
     }
 }

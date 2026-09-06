@@ -1,4 +1,9 @@
 @import 'tailwindcss';
+@import './client.css';
+@import './components.css';
+@import './portal.css';
+@import './auth.css';
+@import './registration.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -18,6 +23,7 @@
    All components and pages should reference these tokens.
    ============================================================= */
 
+   
 :root {
 
     /* ---------------------------------------------------------

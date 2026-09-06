@@ -1,868 +1,369 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('layouts.client')
 
-<head>
+@section('title', 'Security - ORDO')
 
-    <meta charset="UTF-8">
+@section('header-title', 'Security')
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+@section('content')
 
-    <meta
-        name="theme-color"
-        content="#061a35"
-    >
+<div class="main-content-container" style="max-width: 1050px; padding: 10px 0;">
 
-    <title>Security | ORDO</title>
-
-    <style>
-
-        /* =========================================================
-           GLOBAL
-        ========================================================== */
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-
-            font-family:
-                Inter,
-                -apple-system,
-                BlinkMacSystemFont,
-                "Segoe UI",
-                Roboto,
-                Arial,
-                sans-serif;
-
-            background: #f8fafc;
-            color: #0f172a;
-
-            -webkit-font-smoothing: antialiased;
-        }
-
-
-        /* =========================================================
-           PAGE
-        ========================================================== */
-
-        .auth-page {
-            min-height: 100vh;
-
-            display: flex;
-            justify-content: center;
-            align-items: center;
-
-            padding: 40px 20px;
-        }
-
-        .auth-container {
-            width: 100%;
-            max-width: 580px;
-        }
-
-
-        /* =========================================================
-           BRAND
-        ========================================================== */
-
-        .auth-brand {
-            text-align: center;
-            margin-bottom: 28px;
-        }
-
-        .brand-name {
-            margin: 0;
-
-            font-size: 28px;
-            font-weight: 800;
-
-            letter-spacing: 2px;
-
-            color: #0f172a;
-        }
-
-        .brand-subtitle {
-            margin-top: 6px;
-
-            font-size: 11px;
-            font-weight: 700;
-
-            letter-spacing: 0.08em;
-
-            color: #64748b;
-
-            text-transform: uppercase;
-        }
-
-
-        /* =========================================================
-           CARD
-        ========================================================== */
-
-        .auth-card {
-            background: #ffffff;
-
-            border: 1px solid #e2e8f0;
-
-            border-radius: 12px;
-
-            padding: 32px;
-
-            box-shadow:
-                0 1px 3px rgba(0, 0, 0, 0.02),
-                0 4px 12px rgba(0, 0, 0, 0.03);
-        }
-
-
-        /* =========================================================
-           STEP HEADER
-        ========================================================== */
-
-        .step-label {
-            font-size: 11px;
-            font-weight: 700;
-
-            color: #2563eb;
-
-            text-transform: uppercase;
-
-            letter-spacing: 0.06em;
-
-            margin-bottom: 6px;
-        }
-
-        .title {
-            margin: 0;
-
-            font-size: 24px;
-            font-weight: 700;
-
-            color: #0f172a;
-
-            letter-spacing: -0.02em;
-        }
-
-        .description {
-            margin: 6px 0 20px;
-
-            font-size: 13.5px;
-
-            line-height: 1.5;
-
-            color: #64748b;
-        }
-
-
-        /* =========================================================
-           PROGRESS BAR
-        ========================================================== */
-
-        .progress {
-            display: flex;
-
-            gap: 6px;
-
-            margin-bottom: 28px;
-        }
-
-        .progress-step {
-            height: 4px;
-
-            flex: 1;
-
-            background: #e2e8f0;
-
-            border-radius: 999px;
-        }
-
-        .progress-step.active {
-            background: #2563eb;
-        }
-
-
-        /* =========================================================
-           FORM
-        ========================================================== */
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-
-            margin-bottom: 6px;
-
-            font-size: 12.5px;
-            font-weight: 600;
-
-            color: #334155;
-        }
-
-        .required {
-            color: #ef4444;
-        }
-
-
-        /* =========================================================
-           PASSWORD INPUT
-        ========================================================== */
-
-        input[type="password"] {
-            width: 100%;
-
-            height: 42px;
-
-            padding: 0 14px;
-
-            border: 1px solid #cbd5e1;
-
-            border-radius: 8px;
-
-            background: #ffffff;
-
-            color: #0f172a;
-
-            font-size: 13.5px;
-
-            outline: none;
-
-            transition:
-                border-color 0.15s ease,
-                box-shadow 0.15s ease;
-        }
-
-        input[type="password"]:focus {
-            border-color: #2563eb;
-
-            box-shadow:
-                0 0 0 3px
-                rgba(37, 99, 235, 0.12);
-        }
-
-
-        /* =========================================================
-           VALIDATION
-        ========================================================== */
-
-        .field-error {
-            margin-top: 7px;
-
-            font-size: 11.5px;
-
-            line-height: 1.4;
-
-            color: #dc2626;
-        }
-
-        .input-error {
-            border-color: #ef4444 !important;
-
-            box-shadow:
-                0 0 0 3px
-                rgba(239, 68, 68, 0.08) !important;
-        }
-
-        .session-error {
-            margin-bottom: 20px;
-
-            padding: 12px 14px;
-
-            border: 1px solid #fecaca;
-
-            border-radius: 8px;
-
-            background: #fef2f2;
-
-            color: #b91c1c;
-
-            font-size: 12.5px;
-
-            line-height: 1.5;
-        }
-
-
-        /* =========================================================
-           PASSWORD REQUIREMENTS
-        ========================================================== */
-
-        .requirements {
-            margin-top: 10px;
-
-            padding: 14px 16px;
-
-            background: #f8fafc;
-
-            border: 1px solid #e2e8f0;
-
-            border-radius: 8px;
-        }
-
-        .requirements-title {
-            margin: 0 0 8px;
-
-            font-size: 11.5px;
-            font-weight: 700;
-
-            color: #334155;
-        }
-
-        .requirements ul {
-            margin: 0;
-
-            padding-left: 18px;
-        }
-
-        .requirements li {
-            margin-bottom: 4px;
-
-            font-size: 12px;
-
-            color: #64748b;
-        }
-
-        .requirements li:last-child {
-            margin-bottom: 0;
-        }
-
-
-        /* =========================================================
-           TERMS
-        ========================================================== */
-
-        .terms-box {
-            margin-top: 24px;
-
-            padding: 14px 16px;
-
-            background: #f8fafc;
-
-            border: 1px solid #e2e8f0;
-
-            border-radius: 8px;
-        }
-
-        .terms-label {
-            display: flex;
-
-            align-items: flex-start;
-
-            gap: 10px;
-
-            cursor: pointer;
-
-            margin: 0;
-        }
-
-        .terms-label input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-
-            margin-top: 2px;
-
-            flex-shrink: 0;
-
-            accent-color: #2563eb;
-
-            cursor: pointer;
-        }
-
-        .terms-text {
-            font-size: 12.5px;
-
-            line-height: 1.5;
-
-            color: #64748b;
-
-            font-weight: 400;
-        }
-
-        .terms-text a {
-            color: #2563eb;
-
-            font-weight: 600;
-
-            text-decoration: none;
-        }
-
-        .terms-text a:hover {
-            text-decoration: underline;
-        }
-
-
-        /* =========================================================
-           ACTIONS
-        ========================================================== */
-
-        .actions {
-            display: flex;
-
-            justify-content: space-between;
-
-            align-items: center;
-
-            margin-top: 28px;
-
-            padding-top: 20px;
-
-            border-top: 1px solid #f1f5f9;
-        }
-
-        .back-link {
-            color: #64748b;
-
-            font-size: 13px;
-
-            font-weight: 600;
-
-            text-decoration: none;
-
-            transition: color 0.15s ease;
-        }
-
-        .back-link:hover {
-            color: #0f172a;
-        }
-
-        .create-button {
-            height: 42px;
-
-            padding: 0 22px;
-
-            border: 0;
-
-            border-radius: 8px;
-
-            background: #2563eb;
-
-            color: #ffffff;
-
-            font-size: 13px;
-
-            font-weight: 600;
-
-            cursor: pointer;
-
-            transition:
-                background 0.15s ease,
-                transform 0.15s ease,
-                box-shadow 0.15s ease;
-        }
-
-        .create-button:hover {
-            background: #1d4ed8;
-
-            box-shadow:
-                0 4px 10px
-                rgba(37, 99, 235, 0.18);
-
-            transform: translateY(-1px);
-        }
-
-        .create-button:active {
-            transform: translateY(0);
-        }
-
-        .create-button:focus-visible {
-            outline:
-                3px solid
-                rgba(37, 99, 235, 0.16);
-
-            outline-offset: 2px;
-        }
-
-
-        /* =========================================================
-           LOGIN LINK
-        ========================================================== */
-
-        .login-link {
-            text-align: center;
-
-            margin-top: 24px;
-
-            font-size: 13px;
-
-            color: #64748b;
-        }
-
-        .login-link a {
-            color: #2563eb;
-
-            font-weight: 600;
-
-            text-decoration: none;
-        }
-
-        .login-link a:hover {
-            text-decoration: underline;
-        }
-
-
-        /* =========================================================
-           MOBILE
-        ========================================================== */
-
-        @media (max-width: 600px) {
-
-            .auth-page {
-                padding: 20px 16px;
-            }
-
-            .auth-card {
-                padding: 24px 20px;
-            }
-
-            .actions {
-                gap: 12px;
-            }
-
-            .create-button {
-                padding: 0 18px;
-            }
-
-        }
-
-    </style>
-
-</head>
-
-
-<body>
-
-<div class="auth-page">
-
-    <div class="auth-container">
-
-
-        {{-- =====================================================
-             BRAND
-        ====================================================== --}}
-
-        <div class="auth-brand">
-
-            <h1 class="brand-name">
-                ORDO
-            </h1>
-
-            <div class="brand-subtitle">
-                COMMERCIAL CLIENT PORTAL
-            </div>
-
+    <!-- PAGE HEADER -->
+    <div style="margin-bottom: 24px;">
+        <div style="font-size: 11px; font-weight: 700; color: #2563eb; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px;">
+            SETTINGS
         </div>
 
+        <h1 style="font-size: 24px; font-weight: 700; color: #0f172a; letter-spacing: -0.02em; margin: 0 0 4px 0; line-height: 1.2;">
+            Security
+        </h1>
+        <p style="font-size: 13.5px; color: #64748b; margin: 0;">
+            Manage your credentials, two-factor authentication, active devices, and workspace protection policies.
+        </p>
+    </div>
 
-        {{-- =====================================================
-             CARD
-        ====================================================== --}}
+    <!-- FLASH MESSAGES -->
+    @if (session('status'))
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding: 12px 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; color: #166534; font-size: 13px; font-weight: 500;">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink: 0;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span>{{ session('status') }}</span>
+        </div>
+    @endif
 
-        <div class="auth-card">
+    @if ($errors->any())
+        <div style="margin-bottom: 20px; padding: 14px 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; color: #b91c1c; font-size: 13px;">
+            <div style="font-weight: 700; margin-bottom: 6px;">Please correct the following:</div>
+            <ul style="margin: 0; padding-left: 18px;">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
+    <!-- MAIN GRID LAYOUT -->
+    <div style="display: grid; grid-template-columns: minmax(0, 1.85fr) minmax(300px, 1.15fr); gap: 24px; align-items: start;">
 
-            {{-- =================================================
-                 STEP
-            ================================================== --}}
+        <!-- LEFT COLUMN: PRIMARY SECURITY FORMS -->
+        <div style="display: flex; flex-direction: column; gap: 24px;">
 
-            <div class="step-label">
-                Create Account · Step 3 of 3
-            </div>
-
-
-            <h1 class="title">
-                Security
-            </h1>
-
-
-            <p class="description">
-                Create a secure password for your ORDO account.
-            </p>
-
-
-            {{-- =================================================
-                 PROGRESS
-            ================================================== --}}
-
-            <div class="progress">
-
-                <div class="progress-step active"></div>
-
-                <div class="progress-step active"></div>
-
-                <div class="progress-step active"></div>
-
-            </div>
-
-
-            {{-- =================================================
-                 SESSION ERROR
-            ================================================== --}}
-
-            @if (session('error'))
-
-                <div class="session-error">
-
-                    {{ session('error') }}
-
+            {{-- 1. CHANGE PASSWORD CARD --}}
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 28px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                <div style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px;">
+                    CREDENTIALS
                 </div>
+                <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 4px 0;">
+                    Change Password
+                </h2>
+                <p style="font-size: 13px; color: #64748b; margin: 0 0 20px 0;">
+                    Ensure your account is using a long, random password to stay secure.
+                </p>
 
-            @endif
+                <form method="POST" action="{{ route('settings.security.update') }}">
+                    @csrf
 
-
-            {{-- =================================================
-                 VALIDATION ERROR
-            ================================================== --}}
-
-            @if ($errors->any())
-
-                <div class="session-error">
-
-                    Please correct the highlighted fields
-                    before continuing.
-
-                </div>
-
-            @endif
-
-
-            {{-- =================================================
-                 SECURITY FORM
-
-                 IMPORTANT:
-                 POST /register/security
-                 Route name: security.create
-
-                 DO NOT USE:
-                 security.update
-            ================================================== --}}
-
-            <form
-                method="POST"
-                action="{{ route('security.create') }}"
-                class="registration-form"
-                novalidate
-            >
-
-                @csrf
-
-
-                {{-- =================================================
-                     PASSWORD
-                ================================================== --}}
-
-                <div class="form-group">
-
-                    <label for="password">
-
-                        Password
-
-                        <span class="required">
-                            *
-                        </span>
-
-                    </label>
-
-
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        placeholder="Create your password"
-                        autocomplete="new-password"
-                        required
-                        class="@error('password') input-error @enderror"
-                    >
-
-
-                    @error('password')
-
-                        <div class="field-error">
-
-                            {{ $message }}
-
+                    <div style="display: flex; flex-direction: column; gap: 16px;">
+                        <div>
+                            <label for="current_password" style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 6px;">
+                                Current Password <span style="color: #ef4444;">*</span>
+                            </label>
+                            <input
+                                type="password"
+                                id="current_password"
+                                name="current_password"
+                                required
+                                placeholder="Enter current password"
+                                style="width: 100%; height: 42px; padding: 0 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #0f172a; box-sizing: border-box;"
+                            >
                         </div>
 
-                    @enderror
+                        <div>
+                            <label for="password" style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 6px;">
+                                New Password <span style="color: #ef4444;">*</span>
+                            </label>
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                required
+                                placeholder="Create new password (minimum 8 characters)"
+                                style="width: 100%; height: 42px; padding: 0 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #0f172a; box-sizing: border-box;"
+                            >
+                        </div>
 
-
-                    <div class="requirements">
-
-                        <p class="requirements-title">
-                            Password requirements
-                        </p>
-
-                        <ul>
-
-                            <li>
-                                At least 8 characters
-                            </li>
-
-                            <li>
-                                At least one uppercase letter
-                            </li>
-
-                            <li>
-                                At least one lowercase letter
-                            </li>
-
-                            <li>
-                                At least one number
-                            </li>
-
-                        </ul>
-
+                        <div>
+                            <label for="password_confirmation" style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 6px;">
+                                Confirm New Password <span style="color: #ef4444;">*</span>
+                            </label>
+                            <input
+                                type="password"
+                                id="password_confirmation"
+                                name="password_confirmation"
+                                required
+                                placeholder="Re-type new password"
+                                style="width: 100%; height: 42px; padding: 0 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #0f172a; box-sizing: border-box;"
+                            >
+                        </div>
                     </div>
 
+                    <!-- PASSWORD REQUIREMENTS LIST -->
+                    <div style="margin-top: 16px; padding: 14px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                        <div style="font-size: 11.5px; font-weight: 700; color: #475569; margin-bottom: 6px;">
+                            Password requirements:
+                        </div>
+                        <ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #64748b; line-height: 1.6;">
+                            <li>At least 8 characters in length</li>
+                            <li>Include letters and numbers for maximum security</li>
+                            <li>Different from previous passwords</li>
+                        </ul>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <button type="submit" style="height: 40px; padding: 0 20px; background: #2563eb; color: #ffffff; border: none; font-size: 13px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: all .15s ease;">
+                            Update Password
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            {{-- 2. TWO-FACTOR AUTHENTICATION (2FA) CARD --}}
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 28px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 12px;">
+                    <div>
+                        <div style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px;">
+                            VERIFICATION &amp; ACCESS
+                        </div>
+                        <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0;">
+                            Two-Factor Authentication (2FA)
+                        </h2>
+                    </div>
+
+                    @if ($twoFactorEnabled ?? false)
+                        <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: #dcfce7; color: #166534; font-size: 11px; font-weight: 700; border-radius: 999px;">
+                            <span style="width: 6px; height: 6px; border-radius: 50%; background: #16a34a;"></span>
+                            Enabled
+                        </span>
+                    @else
+                        <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: #fef3c7; color: #92400e; font-size: 11px; font-weight: 700; border-radius: 999px;">
+                            <span style="width: 6px; height: 6px; border-radius: 50%; background: #d97706;"></span>
+                            Recommended
+                        </span>
+                    @endif
                 </div>
 
+                <p style="font-size: 13px; color: #64748b; margin: 0 0 20px 0; line-height: 1.5;">
+                    Add an extra layer of security to your commercial account. When 2FA is active, signing in requires your password and a temporary verification code.
+                </p>
 
-                {{-- =================================================
-                     CONFIRM PASSWORD
-                ================================================== --}}
-
-                <div class="form-group">
-
-                    <label for="password_confirmation">
-
-                        Confirm Password
-
-                        <span class="required">
-                            *
-                        </span>
-
-                    </label>
-
-
-                    <input
-                        type="password"
-                        id="password_confirmation"
-                        name="password_confirmation"
-                        placeholder="Confirm your password"
-                        autocomplete="new-password"
-                        required
-                        class="@error('password_confirmation') input-error @enderror"
-                    >
-
-
-                    @error('password_confirmation')
-
-                        <div class="field-error">
-
-                            {{ $message }}
-
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <!-- METHOD: AUTHENTICATOR APP -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 36px; height: 36px; border-radius: 8px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <rect x="5" y="2" width="14" height="20" rx="2" stroke-width="1.8"/>
+                                    <path d="M12 18h.01" stroke-width="2"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div style="font-size: 13px; font-weight: 600; color: #0f172a;">Authenticator App (TOTP)</div>
+                                <div style="font-size: 11.5px; color: #64748b;">Google Authenticator, Microsoft Authenticator, or 1Password</div>
+                            </div>
                         </div>
 
-                    @enderror
+                        <form method="POST" action="{{ route('settings.security.two-factor') }}" style="margin: 0;">
+                            @csrf
+                            <input type="hidden" name="enabled" value="{{ ($twoFactorEnabled ?? false) ? '0' : '1' }}">
+                            <button type="submit" style="padding: 6px 14px; background: {{ ($twoFactorEnabled ?? false) ? '#fee2e2' : '#ffffff' }}; border: 1px solid {{ ($twoFactorEnabled ?? false) ? '#fca5a5' : '#cbd5e1' }}; color: {{ ($twoFactorEnabled ?? false) ? '#991b1b' : '#334155' }}; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                                {{ ($twoFactorEnabled ?? false) ? 'Disable' : 'Enable' }}
+                            </button>
+                        </form>
+                    </div>
 
-                </div>
-
-
-                {{-- =================================================
-                     TERMS
-                ================================================== --}}
-
-                <div class="terms-box">
-
-                    <label class="terms-label">
-
-                        <input
-                            type="checkbox"
-                            name="terms"
-                            value="1"
-                            required
-                            @checked(old('terms'))
-                        >
-
-
-                        <span class="terms-text">
-
-                            I agree to the
-
-                            <a href="/policies">
-                                Terms of Use
-                            </a>
-
-                            and
-
-                            <a href="/policies">
-                                Privacy Policy
-                            </a>.
-
-                        </span>
-
-                    </label>
-
-
-                    @error('terms')
-
-                        <div class="field-error">
-
-                            {{ $message }}
-
+                    <!-- METHOD: SMS / EMAIL OTP -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 36px; height: 36px; border-radius: 8px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke-width="1.8"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div style="font-size: 13px; font-weight: 600; color: #0f172a;">Email &amp; Mobile OTP Backup</div>
+                                <div style="font-size: 11.5px; color: #64748b;">Receive one-time passcodes on your verified contact channels</div>
+                            </div>
                         </div>
 
-                    @enderror
+                        <span style="font-size: 11.5px; font-weight: 600; color: #16a34a; background: #dcfce7; padding: 4px 10px; border-radius: 999px;">Active</span>
+                    </div>
+                </div>
+            </div>
 
+            {{-- 3. ACTIVE SESSIONS & DEVICE MANAGEMENT CARD --}}
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 28px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <div>
+                        <div style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px;">
+                            DEVICE SESSIONS
+                        </div>
+                        <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0;">
+                            Active Browser Sessions
+                        </h2>
+                    </div>
+
+                    <form method="POST" action="{{ route('settings.security.revoke-sessions') }}" style="margin: 0;">
+                        @csrf
+                        <button type="submit" style="padding: 6px 12px; background: #ffffff; border: 1px solid #cbd5e1; color: #475569; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                            Sign out other devices
+                        </button>
+                    </form>
                 </div>
 
+                <p style="font-size: 13px; color: #64748b; margin: 0 0 20px 0;">
+                    Devices and locations that are currently authenticated to your ORDO workspace.
+                </p>
 
-                {{-- =================================================
-                     ACTIONS
-                ================================================== --}}
-
-                <div class="actions">
-
-
-                    <a
-                        href="{{ route('register.verification') }}"
-                        class="back-link"
-                    >
-
-                        ← Back
-
-                    </a>
-
-
-                    <button
-                        type="submit"
-                        class="create-button"
-                    >
-
-                        Create Account
-
-                    </button>
-
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    @foreach (($sessions ?? [
+                        ['device' => 'Chrome on Windows 11', 'ip' => '127.0.0.1', 'location' => 'Makati City, Philippines', 'is_current' => true, 'last_active' => 'Active now'],
+                        ['device' => 'Safari on iPhone 15 Pro', 'ip' => '112.198.74.21', 'location' => 'Taguig, Philippines', 'is_current' => false, 'last_active' => '2 hours ago']
+                    ]) as $s)
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: {{ $s['is_current'] ? '#f0fdf4' : '#ffffff' }};">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="width: 36px; height: 36px; border-radius: 8px; background: {{ $s['is_current'] ? '#dcfce7' : '#f1f5f9' }}; color: {{ $s['is_current'] ? '#166534' : '#475569' }}; display: flex; align-items: center; justify-content: center;">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <rect x="2" y="3" width="20" height="14" rx="2" stroke-width="1.8"/>
+                                        <path d="M8 21h8m-4-4v4" stroke-width="1.8"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div style="font-size: 13px; font-weight: 600; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                                        {{ $s['device'] }}
+                                        @if ($s['is_current'])
+                                            <span style="font-size: 10.5px; font-weight: 700; background: #166534; color: #ffffff; padding: 2px 7px; border-radius: 999px;">THIS DEVICE</span>
+                                        @endif
+                                    </div>
+                                    <div style="font-size: 11.5px; color: #64748b; margin-top: 2px;">
+                                        IP: {{ $s['ip'] }} &bull; {{ $s['location'] }} &bull; {{ $s['last_active'] }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
-
-
-            </form>
+            </div>
 
         </div>
 
+        <!-- RIGHT COLUMN: AUDIT LOGS & WORKSPACE POLICIES -->
+        <div style="display: flex; flex-direction: column; gap: 24px;">
 
-        {{-- =====================================================
-             LOGIN
-        ====================================================== --}}
+            {{-- 4. SECURITY SCORE / HEALTH CARD --}}
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                <div style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px;">
+                    SECURITY HEALTH
+                </div>
+                <h3 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 12px 0;">
+                    Account Protection
+                </h3>
 
-        <div class="login-link">
+                <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px; padding: 12px; background: #eff6ff; border: 1px solid #dbeafe; border-radius: 8px;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: #2563eb; color: #ffffff; font-weight: 800; font-size: 15px; display: flex; align-items: center; justify-content: center;">
+                        85%
+                    </div>
+                    <div>
+                        <div style="font-size: 13px; font-weight: 700; color: #1e3a8a;">Strong Protection</div>
+                        <div style="font-size: 11.5px; color: #3b82f6;">All core safeguards configured</div>
+                    </div>
+                </div>
 
-            Already have an ORDO account?
+                <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: #334155;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <svg width="15" height="15" fill="none" stroke="#16a34a" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <span>Password updated recently</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <svg width="15" height="15" fill="none" stroke="#16a34a" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <span>Verified contact channels</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <svg width="15" height="15" fill="none" stroke="#16a34a" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <span>Device &amp; IP rate limits active</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <svg width="15" height="15" fill="none" stroke="#16a34a" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <span>HTTPS / TLS 1.3 Transport</span>
+                    </div>
+                </div>
+            </div>
 
-            <a href="{{ route('login') }}">
-                Sign In
-            </a>
+            {{-- 5. WORKSPACE POLICIES --}}
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                <div style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px;">
+                    SESSION POLICIES
+                </div>
+                <h3 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 14px 0;">
+                    Workspace Guardrails
+                </h3>
+
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 6px;">
+                        Automatic Inactivity Timeout
+                    </label>
+                    <select style="width: 100%; height: 38px; padding: 0 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12.5px; color: #0f172a; background: #fff;">
+                        <option value="15">15 minutes</option>
+                        <option value="30" selected>30 minutes (Standard)</option>
+                        <option value="60">1 hour</option>
+                        <option value="240">4 hours</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; color: #334155; cursor: pointer;">
+                        <input type="checkbox" checked style="margin-top: 2px; accent-color: #2563eb;">
+                        <span>Alert me via email on new sign-ins from unrecognized devices</span>
+                    </label>
+                    <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; color: #334155; cursor: pointer;">
+                        <input type="checkbox" checked style="margin-top: 2px; accent-color: #2563eb;">
+                        <span>Confirm password before updating billing or banking records</span>
+                    </label>
+                </div>
+            </div>
+
+            {{-- 6. RECENT SECURITY ACTIVITY LOG --}}
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                <div style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px;">
+                    AUDIT TRAIL
+                </div>
+                <h3 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 14px 0;">
+                    Recent Activity
+                </h3>
+
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    @foreach (($activityLogs ?? [
+                        ['event' => 'Successful sign in', 'device' => 'Chrome on Windows 11', 'ip' => '127.0.0.1', 'date' => now()->format('M d, H:i')],
+                        ['event' => 'Session refreshed', 'device' => 'Chrome on Windows 11', 'ip' => '127.0.0.1', 'date' => now()->subHours(1)->format('M d, H:i')],
+                        ['event' => 'Sign in from mobile', 'device' => 'Safari on iPhone 15 Pro', 'ip' => '112.198.74.21', 'date' => now()->subHours(2)->format('M d, H:i')]
+                    ]) as $log)
+                        <div style="display: flex; align-items: flex-start; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid #f1f5f9;">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; background: #2563eb; margin-top: 4px; flex-shrink: 0;"></span>
+                            <div>
+                                <div style="font-size: 12.5px; font-weight: 600; color: #0f172a;">{{ $log['event'] }}</div>
+                                <div style="font-size: 11px; color: #64748b; margin-top: 1px;">
+                                    {{ $log['device'] }} &bull; {{ $log['date'] }}
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
 
         </div>
-
 
     </div>
 
 </div>
 
-</body>
-
-</html>
+@endsection

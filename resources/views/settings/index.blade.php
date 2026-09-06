@@ -349,40 +349,6 @@
 </div>
 
 
-<style>
 
-    /* =========================================================
-       SETTINGS CARD HOVER
-    ========================================================== */
-
-    .card-setting-item:hover {
-        border-color: #bfdbfe !important;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08) !important;
-    }
-
-
-    /* =========================================================
-       RESPONSIVE SETTINGS GRID
-    ========================================================== */
-
-    @media (max-width: 1000px) {
-
-        .settings-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-        }
-
-    }
-
-
-    @media (max-width: 650px) {
-
-        .settings-grid {
-            grid-template-columns: 1fr !important;
-        }
-
-    }
-
-</style>
 
 @endsection

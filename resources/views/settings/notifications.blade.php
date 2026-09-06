@@ -22,6 +22,15 @@
         </p>
     </div>
 
+    @if (session('status'))
+        <div style="margin-bottom: 20px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46; font-size: 13px; font-weight: 500;">
+            {{ session('status') }}
+        </div>
+    @endif
+
+    <form method="POST" action="{{ route('settings.notifications.update') }}">
+        @csrf
+
     {{-- NOTIFICATION PREFERENCES --}}
     <div class="card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         <div style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px;">
@@ -202,11 +211,12 @@
                 </p>
             </div>
 
-            <button type="button" style="background: #2563eb; color: #ffffff; border: 0; border-radius: 8px; padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s ease;">
+            <button type="submit" style="background: #2563eb; color: #ffffff; border: 0; border-radius: 8px; padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s ease;">
                 Save Changes
             </button>
         </div>
     </div>
+    </form>
 
 </div>
 

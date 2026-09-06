@@ -806,64 +806,6 @@
 
 
 <!-- RESPONSIVE STYLES -->
-<style>
 
-    @media (max-width: 1000px) {
-
-        .records-top-grid {
-            grid-template-columns: 1fr !important;
-        }
-
-        .dashboard-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-        }
-
-    }
-
-
-    @media (max-width: 700px) {
-
-        .page-header {
-            flex-direction: column !important;
-            gap: 16px;
-        }
-
-        .page-header > div:last-child {
-            width: 100%;
-            justify-content: flex-start;
-        }
-
-        .dashboard-grid {
-            grid-template-columns: 1fr !important;
-        }
-
-        .activity-trend-card {
-            min-height: 190px !important;
-        }
-
-    }
-
-
-    @media (max-width: 600px) {
-
-        .records-container {
-            padding: 8px 0 !important;
-        }
-
-        .page-header > div:last-child {
-            flex-wrap: wrap;
-        }
-
-        .records-top-grid {
-            gap: 12px !important;
-        }
-
-        .card {
-            box-sizing: border-box;
-        }
-
-    }
-
-</style>
 
 @endsection

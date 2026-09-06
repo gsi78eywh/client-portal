@@ -7,7 +7,7 @@
 @section('content')
 
 @php
-    $accountProfile = session('account_profile', []);
+    $accountProfile = $profile ?? session('account_profile', []);
 @endphp
 
 <div class="main-content-container" style="max-width: 900px; padding: 10px 0;">
@@ -233,34 +233,16 @@
                         "
                     >
 
-                        <option
-                            value="Corporation"
-                            {{ old('account_type', $accountProfile['account_type'] ?? 'Corporation') === 'Corporation' ? 'selected' : '' }}
-                        >
-                            Corporation
-                        </option>
-
-                        <option
-                            value="Sole Proprietorship"
-                            {{ old('account_type', $accountProfile['account_type'] ?? '') === 'Sole Proprietorship' ? 'selected' : '' }}
-                        >
-                            Sole Proprietorship
-                        </option>
-
-                        <option
-                            value="Partnership"
-                            {{ old('account_type', $accountProfile['account_type'] ?? '') === 'Partnership' ? 'selected' : '' }}
-                        >
-                            Partnership
-                        </option>
-
-                        <option
-                            value="Individual"
-                            {{ old('account_type', $accountProfile['account_type'] ?? '') === 'Individual' ? 'selected' : '' }}
-                        >
-                            Individual / Professional
-                        </option>
-
+                        <option value="Corporation" {{ old('account_type', is_array($accountProfile) ? ($accountProfile['account_type'] ?? 'Corporation') : ($accountProfile->account_type ?? 'Corporation')) === 'Corporation' ? 'selected' : '' }}>Corporation</option>
+                        <option value="Individual" {{ old('account_type', is_array($accountProfile) ? ($accountProfile['account_type'] ?? '') : ($accountProfile->account_type ?? '')) === 'Individual' ? 'selected' : '' }}>Individual</option>
+                        <option value="Professional / Practitioner" {{ old('account_type', is_array($accountProfile) ? ($accountProfile['account_type'] ?? '') : ($accountProfile->account_type ?? '')) === 'Professional / Practitioner' ? 'selected' : '' }}>Professional / Practitioner</option>
+                        <option value="Sole Proprietorship" {{ old('account_type', is_array($accountProfile) ? ($accountProfile['account_type'] ?? '') : ($accountProfile->account_type ?? '')) === 'Sole Proprietorship' ? 'selected' : '' }}>Sole Proprietorship</option>
+                        <option value="Partnership" {{ old('account_type', is_array($accountProfile) ? ($accountProfile['account_type'] ?? '') : ($accountProfile->account_type ?? '')) === 'Partnership' ? 'selected' : '' }}>Partnership</option>
+                        <option value="OPC" {{ old('account_type', is_array($accountProfile) ? ($accountProfile['account_type'] ?? '') : ($accountProfile->account_type ?? '')) === 'OPC' ? 'selected' : '' }}>OPC (One Person Corporation)</option>
+                        <option value="Association / Nonprofit" {{ old('account_type', is_array($accountProfile) ? ($accountProfile['account_type'] ?? '') : ($accountProfile->account_type ?? '')) === 'Association / Nonprofit' ? 'selected' : '' }}>Association / Nonprofit</option>
+                        <option value="Cooperative" {{ old('account_type', is_array($accountProfile) ? ($accountProfile['account_type'] ?? '') : ($accountProfile->account_type ?? '')) === 'Cooperative' ? 'selected' : '' }}>Cooperative</option>
+                        <option value="Government / Public Entity" {{ old('account_type', is_array($accountProfile) ? ($accountProfile['account_type'] ?? '') : ($accountProfile->account_type ?? '')) === 'Government / Public Entity' ? 'selected' : '' }}>Government / Public Entity</option>
+                        <option value="Other" {{ old('account_type', is_array($accountProfile) ? ($accountProfile['account_type'] ?? '') : ($accountProfile->account_type ?? '')) === 'Other' ? 'selected' : '' }}>Other</option>
                     </select>
 
                 </div>
@@ -281,8 +263,8 @@
 
                     <input
                         type="text"
-                        name="registered_name"
-                        value="{{ old('registered_name', $accountProfile['registered_name'] ?? 'John Kelly and Company (JK&C Inc.)') }}"
+                        name="legal_name"
+                        value="{{ old('legal_name', is_array($accountProfile) ? ($accountProfile['legal_name'] ?? $accountProfile['registered_name'] ?? 'John Kelly and Company (JK&C Inc.)') : ($accountProfile->legal_name ?? 'John Kelly and Company (JK&C Inc.)')) }}"
                         placeholder="Enter legal or registered name"
                         style="
                             width: 100%;
@@ -586,34 +568,30 @@
                         "
                     >
 
-                        <option
-                            value="President / CEO"
-                            {{ old('relationship', $accountProfile['relationship'] ?? 'President / CEO') === 'President / CEO' ? 'selected' : '' }}
-                        >
-                            President / CEO
-                        </option>
-
-                        <option
-                            value="Director"
-                            {{ old('relationship', $accountProfile['relationship'] ?? '') === 'Director' ? 'selected' : '' }}
-                        >
-                            Director
-                        </option>
-
-                        <option
-                            value="Owner / Sole Proprietor"
-                            {{ old('relationship', $accountProfile['relationship'] ?? '') === 'Owner / Sole Proprietor' ? 'selected' : '' }}
-                        >
-                            Owner / Sole Proprietor
-                        </option>
-
-                        <option
-                            value="Authorized Representative"
-                            {{ old('relationship', $accountProfile['relationship'] ?? '') === 'Authorized Representative' ? 'selected' : '' }}
-                        >
-                            Authorized Representative
-                        </option>
-
+                        @php
+                            $selectedRel = old('relationship', is_array($accountProfile) ? ($accountProfile['relationship'] ?? 'President / CEO') : 'President / CEO');
+                            $relOptions = [
+                                'Self / Account Owner',
+                                'Owner / Proprietor',
+                                'Professional / Practitioner',
+                                'Partner',
+                                'Stockholder / Shareholder',
+                                'Director / Trustee',
+                                'President / CEO',
+                                'Corporate Officer',
+                                'Corporate Secretary',
+                                'Authorized Representative',
+                                'Accountant / Bookkeeper',
+                                'Employee / Staff',
+                                'Consultant / Adviser',
+                                'Other',
+                            ];
+                        @endphp
+                        @foreach ($relOptions as $opt)
+                            <option value="{{ $opt }}" {{ $selectedRel === $opt ? 'selected' : '' }}>
+                                {{ $opt }}
+                            </option>
+                        @endforeach
                     </select>
 
                 </div>

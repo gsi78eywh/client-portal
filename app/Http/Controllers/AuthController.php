@@ -2,19 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Account;
-use App\Models\AccountProfile;
+use App\Http\Requests\Auth\ForgotPasswordRequest;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Models\User;
-use App\Models\UserProfile;
+use App\Services\PortalSessionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        protected PortalSessionService $sessionService
+    ) {}
+
     /**
      * Display the login view.
      */
@@ -26,13 +30,9 @@ class AuthController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function login(Request $request): RedirectResponse
+    public function login(LoginRequest $request): RedirectResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email', 'max:255'],
-            'password' => ['required', 'string'],
-        ]);
-
+        $credentials = $request->only('email', 'password');
         $remember = $request->boolean('remember');
 
         if (!Auth::attempt($credentials, $remember)) {
@@ -43,53 +43,11 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
+        /** @var User $user */
         $user = Auth::user();
 
-        $userProfile = UserProfile::where('user_id', $user->id)->first();
-
-        $accountUser = DB::table('account_user')
-            ->where('user_id', $user->id)
-            ->first();
-
-        $account = $accountUser
-            ? Account::find($accountUser->account_id)
-            : null;
-
-        $accountProfile = $account
-            ? AccountProfile::where('account_id', $account->id)->first()
-            : null;
-
-        // Set session state for portal compatibility
-        session([
-            'client.authenticated' => true,
-            'client.user_id' => $user->id,
-            'client.account_id' => $account?->id,
-            'client.user' => [
-                'first_name' => $userProfile?->first_name ?? $user->name,
-                'middle_name' => $userProfile?->middle_name ?? '',
-                'last_name' => $userProfile?->last_name ?? '',
-                'suffix' => $userProfile?->suffix ?? '',
-                'date_of_birth' => $userProfile?->date_of_birth?->format('Y-m-d') ?? '',
-                'gender' => $userProfile?->gender ?? '',
-                'country' => $userProfile?->country_region ?? '',
-                'mobile_number' => $userProfile?->mobile_number ?? '',
-                'email' => $user->email,
-            ],
-        ]);
-
-        if ($account) {
-            session([
-                'client.account' => [
-                    'id' => $account->id,
-                    'account_number' => $account->account_number,
-                    'name' => $accountProfile?->legal_name ?? 'My ORDO Account',
-                    'type' => $accountProfile?->account_type ?? '',
-                    'status' => $account->status,
-                ],
-                'client.subscription.status' => 'trial',
-                'client.subscription.plan' => '30-Day Free Access',
-            ]);
-        }
+        // Hydrate portal session state
+        $this->sessionService->initSession($user);
 
         return redirect()->intended(route('town-hall'));
     }
@@ -101,6 +59,7 @@ class AuthController extends Controller
     {
         Auth::logout();
 
+        $this->sessionService->clearSession();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
@@ -118,19 +77,17 @@ class AuthController extends Controller
     /**
      * Handle the password reset request.
      */
-    public function sendResetLink(Request $request): RedirectResponse
+    public function sendResetLink(ForgotPasswordRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'email' => ['required', 'email', 'max:255'],
-        ]);
+        $email = $request->validated('email');
 
         session([
-            'password_reset.email' => $validated['email'],
+            'password_reset.email' => $email,
             'password_reset.requested' => true,
         ]);
 
         return redirect()->route('check-email', [
-            'email' => $validated['email'],
+            'email' => $email,
         ]);
     }
 
@@ -165,7 +122,7 @@ class AuthController extends Controller
     /**
      * Update the user's password.
      */
-    public function resetPassword(Request $request): RedirectResponse
+    public function resetPassword(ResetPasswordRequest $request): RedirectResponse
     {
         if (!session()->has('password_reset.requested') && !$request->has('email')) {
             return redirect()->route('password.request')->withErrors([
@@ -173,16 +130,11 @@ class AuthController extends Controller
             ]);
         }
 
-        $validated = $request->validate([
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
-
         $email = $request->input('email', session('password_reset.email'));
-
         $user = User::where('email', $email)->first();
 
         if ($user) {
-            $user->password = $validated['password'];
+            $user->password = $request->validated('password');
             $user->save();
         }
 

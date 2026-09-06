@@ -10,7 +10,6 @@
     <div>
         <div class="card-label">MODULE SETTINGS</div>
 
-```
     <h1 class="page-title">
         Records
     </h1>
@@ -20,7 +19,6 @@
         access settings for your client account.
     </p>
 </div>
-```
 
 </div>
 
@@ -28,7 +26,6 @@
 
 <div class="card" style="margin-bottom:24px;">
 
-```
 <div class="card-label">
     MODULE STATUS
 </div>
@@ -67,7 +64,6 @@
     </span>
 
 </div>
-```
 
 </div>
 
@@ -75,7 +71,6 @@
 
 <div class="card" style="margin-bottom:24px;">
 
-```
 <div class="card-label">
     RECORD PREFERENCES
 </div>
@@ -192,7 +187,6 @@
     </div>
 
 </div>
-```
 
 </div>
 
@@ -200,7 +194,6 @@
 
 <div class="card" style="margin-bottom:24px;">
 
-```
 <div class="card-label">
     RETENTION
 </div>
@@ -280,7 +273,6 @@
     </div>
 
 </div>
-```
 
 </div>
 
@@ -288,7 +280,6 @@
 
 <div class="card" style="margin-bottom:24px;">
 
-```
 <div class="card-label">
     ACCESS &amp; ORGANIZATION
 </div>
@@ -393,7 +384,6 @@
     </div>
 
 </div>
-```
 
 </div>
 
@@ -401,7 +391,6 @@
 
 <div class="card">
 
-```
 <div style="
     display:flex;
     justify-content:space-between;
@@ -434,7 +423,6 @@
     </button>
 
 </div>
-```
 
 </div>
 

@@ -65,6 +65,18 @@ return [
             'transport' => 'resend',
         ],
 
+        'brevo' => [
+            'transport' => 'smtp',
+            'scheme' => env('BREVO_SCHEME', null),
+            'url' => env('BREVO_URL', null),
+            'host' => env('BREVO_SMTP_HOST', 'smtp-relay.brevo.com'),
+            'port' => env('BREVO_SMTP_PORT', 587),
+            'username' => env('BREVO_SMTP_LOGIN'),
+            'password' => env('BREVO_SMTP_KEY'),
+            'timeout' => null,
+            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+        ],
+
         'sendmail' => [
             'transport' => 'sendmail',
             'path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),

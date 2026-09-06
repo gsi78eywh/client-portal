@@ -903,63 +903,6 @@
 <!-- =========================================================
      RESPONSIVE STYLES
 ========================================================== -->
-<style>
 
-    .transmittals-container {
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .trend-bar {
-        transition: height 0.25s ease, opacity 0.2s ease;
-    }
-
-    .trend-bar:hover {
-        opacity: 0.85;
-    }
-
-    .card {
-        box-sizing: border-box;
-    }
-
-    @media (max-width: 1000px) {
-
-        .overview-activity-grid {
-            grid-template-columns: 1fr !important;
-        }
-
-        .dashboard-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-        }
-
-    }
-
-    @media (max-width: 700px) {
-
-        .page-header {
-            flex-direction: column !important;
-            gap: 16px;
-        }
-
-        .page-header > div:last-child {
-            width: 100%;
-        }
-
-        .page-header .btn-primary {
-            flex: 1;
-            justify-content: center;
-        }
-
-        .dashboard-grid {
-            grid-template-columns: 1fr !important;
-        }
-
-        .activity-trend-card {
-            min-height: 180px !important;
-        }
-
-    }
-
-</style>
 
 @endsection

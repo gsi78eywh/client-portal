@@ -10,7 +10,6 @@
     <div>
         <div class="card-label">MODULE SETTINGS</div>
 
-```
     <h1 class="page-title">
         Human Capital
     </h1>
@@ -20,7 +19,6 @@
         management settings for your client account.
     </p>
 </div>
-```
 
 </div>
 
@@ -28,7 +26,6 @@
 
 <div class="card" style="margin-bottom:24px;">
 
-```
 <div class="card-label">
     MODULE STATUS
 </div>
@@ -67,7 +64,6 @@
     </span>
 
 </div>
-```
 
 </div>
 
@@ -75,7 +71,6 @@
 
 <div class="card" style="margin-bottom:24px;">
 
-```
 <div class="card-label">
     HUMAN CAPITAL PREFERENCES
 </div>
@@ -192,7 +187,6 @@
     </div>
 
 </div>
-```
 
 </div>
 
@@ -200,7 +194,6 @@
 
 <div class="card" style="margin-bottom:24px;">
 
-```
 <div class="card-label">
     EMPLOYEE RECORDS
 </div>
@@ -279,7 +272,6 @@
     </div>
 
 </div>
-```
 
 </div>
 
@@ -287,7 +279,6 @@
 
 <div class="card" style="margin-bottom:24px;">
 
-```
 <div class="card-label">
     WORKFORCE MANAGEMENT
 </div>
@@ -392,7 +383,6 @@
     </div>
 
 </div>
-```
 
 </div>
 
@@ -400,7 +390,6 @@
 
 <div class="card">
 
-```
 <div style="
     display:flex;
     justify-content:space-between;
@@ -433,7 +422,6 @@
     </button>
 
 </div>
-```
 
 </div>
 

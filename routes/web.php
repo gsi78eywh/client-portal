@@ -1,17 +1,13 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\JkcController;
+use App\Http\Controllers\ModuleController;
+use App\Http\Controllers\PortalController;
 use App\Http\Controllers\RegistrationController;
-use App\Models\Account;
-use App\Models\AccountProfile;
-use App\Models\User;
-use App\Models\UserProfile;
-use Illuminate\Http\Request;
+use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Str;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,14 +22,11 @@ Route::get('/', function () {
     return redirect()->route('login');
 })->name('home');
 
-Route::get('/portal-test', function () {
-    return view('portal.test');
-})->name('portal.test');
-
+Route::get('/portal-test', [PortalController::class, 'test'])->name('portal.test');
 
 /*
 |--------------------------------------------------------------------------
-| GUEST-ONLY ROUTES (Redirects authenticated users to /town-hall)
+| GUEST-ONLY ROUTES
 |--------------------------------------------------------------------------
 */
 Route::middleware('guest')->group(function () {
@@ -46,7 +39,7 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 
-    // Compatibility route
+    // Compatibility routes
     Route::get('/settings/login', [AuthController::class, 'showLoginForm'])->name('settings.login');
     Route::post('/settings/login', [AuthController::class, 'login'])->name('settings.login.submit');
 
@@ -100,25 +93,22 @@ Route::middleware('guest')->group(function () {
     Route::get('/register/security', [RegistrationController::class, 'security'])->name('register.security');
     Route::post('/register/security', [RegistrationController::class, 'storeSecurity'])->name('security.create');
 
-    // Final Step: Confirmation & Account Creation
+    // Step 7: Confirmation & Complete Registration
     Route::get('/register/confirmation', [RegistrationController::class, 'confirmation'])->name('register.confirmation');
     Route::post('/register/confirmation', [RegistrationController::class, 'completeRegistration'])->name('confirmation.submit');
 
     // Compatibility Routes
     Route::get('/confirmation', [RegistrationController::class, 'confirmation']);
     Route::post('/confirmation', [RegistrationController::class, 'completeRegistration']);
-    Route::get('/account-created', function () {
-        return view('auth.account-created');
-    })->name('account.created');
+    Route::get('/account-created', [PortalController::class, 'accountCreated'])->name('account.created');
     Route::post('/account-created', function () {
         return redirect()->route('town-hall');
     });
 });
 
-
 /*
 |--------------------------------------------------------------------------
-| AUTHENTICATED ROUTES (Protected by 'auth' middleware)
+| AUTHENTICATED ROUTES
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
@@ -135,225 +125,82 @@ Route::middleware('auth')->group(function () {
     | TOWN HALL (Dashboard)
     |--------------------------------------------------------------------------
     */
-    Route::get('/town-hall', function () {
-        return view('portal.town-hall');
-    })->name('town-hall');
+    Route::get('/town-hall', [PortalController::class, 'townHall'])->name('town-hall');
 
     /*
     |--------------------------------------------------------------------------
     | BUSINESS MODULES
     |--------------------------------------------------------------------------
     */
-    Route::get('/entity-governance', function () {
-        return view('modules.entity-governance');
-    })->name('entity-governance');
-
-    Route::get('/compliance', function () {
-        return view('modules.compliance');
-    })->name('compliance');
-
-    Route::get('/finance', function () {
-        return view('modules.finance');
-    })->name('finance');
-
-    Route::get('/human-capital', function () {
-        return view('modules.human-capital');
-    })->name('human-capital');
-
-    Route::get('/records', function () {
-        return view('modules.records');
-    })->name('records');
-
-    Route::get('/transmittals', function () {
-        return view('modules.transmittals');
-    })->name('transmittals');
+    Route::get('/entity-governance', [ModuleController::class, 'entityGovernance'])->name('entity-governance');
+    Route::get('/compliance', [ModuleController::class, 'compliance'])->name('compliance');
+    Route::get('/finance', [ModuleController::class, 'finance'])->name('finance');
+    Route::get('/human-capital', [ModuleController::class, 'humanCapital'])->name('human-capital');
+    Route::get('/records', [ModuleController::class, 'records'])->name('records');
+    Route::get('/transmittals', [ModuleController::class, 'transmittals'])->name('transmittals');
 
     /*
     |--------------------------------------------------------------------------
     | JK&C SECTIONS
     |--------------------------------------------------------------------------
     */
-    Route::get('/jkc/announcements', function () {
-        return view('jkc.announcements');
-    })->name('jkc.announcements');
-
-    Route::get('/jkc/engagements', function () {
-        return view('jkc.engagements');
-    })->name('jkc.engagements');
-
-    Route::get('/jkc/subscriptions', function () {
-        return view('jkc.subscriptions');
-    })->name('jkc.subscriptions');
-
-    Route::get('/jkc/support', function () {
-        return view('jkc.support');
-    })->name('jkc.support');
-
-    Route::get('/jkc/activity-reports', function () {
-        return view('jkc.activity-reports');
-    })->name('jkc.activity-reports');
-
-    Route::get('/jkc/billing', function () {
-        return view('jkc.billing');
-    })->name('jkc.billing');
+    Route::get('/jkc/announcements', [JkcController::class, 'announcements'])->name('jkc.announcements');
+    Route::get('/jkc/engagements', [JkcController::class, 'engagements'])->name('jkc.engagements');
+    Route::get('/jkc/subscriptions', [JkcController::class, 'subscriptions'])->name('jkc.subscriptions');
+    Route::get('/jkc/support', [JkcController::class, 'support'])->name('jkc.support');
+    Route::post('/jkc/support', [JkcController::class, 'submitTicket'])->name('jkc.support.submit');
+    Route::get('/jkc/activity-reports', [JkcController::class, 'activityReports'])->name('jkc.activity-reports');
+    Route::get('/jkc/billing', [JkcController::class, 'billing'])->name('jkc.billing');
+    Route::get('/jkc/billing/soa', [JkcController::class, 'downloadSoa'])->name('jkc.billing.soa');
+    Route::get('/jkc/billing/invoice/{invoice}', [JkcController::class, 'downloadInvoice'])->name('jkc.billing.invoice');
+    Route::get('/jkc/activity-reports/download/{id}', [JkcController::class, 'downloadReport'])->name('jkc.activity-reports.download');
 
     /*
     |--------------------------------------------------------------------------
     | CENTRAL SETTINGS
     |--------------------------------------------------------------------------
     */
-    Route::get('/settings', function () {
-        return view('settings.index');
-    })->name('settings');
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
 
-    Route::get('/settings/my-account', function () {
-        $userId = session('client.user_id') ?? Auth::id();
-        $user = $userId ? User::find($userId) : Auth::user();
-        $userProfile = $user ? UserProfile::where('user_id', $user->id)->first() : null;
+    Route::get('/settings/my-account', [SettingsController::class, 'myAccount'])->name('settings.my-account');
+    Route::post('/settings/my-account', [SettingsController::class, 'updateMyAccount'])->name('settings.my-account.update');
 
-        return view('settings.my-account', [
-            'user' => $user,
-            'profile' => $userProfile,
-        ]);
-    })->name('settings.my-account');
+    Route::get('/settings/account-profile', [SettingsController::class, 'accountProfile'])->name('settings.account-profile');
+    Route::post('/settings/account-profile', [SettingsController::class, 'updateAccountProfile'])->name('settings.account-profile.update');
 
-    Route::post('/settings/my-account', function (Request $request) {
-        $userId = session('client.user_id') ?? Auth::id();
-        $user = User::findOrFail($userId);
+    Route::get('/settings/verification', [SettingsController::class, 'verification'])->name('settings.verification');
+    Route::post('/settings/verification', [SettingsController::class, 'submitVerification'])->name('settings.verification.submit');
 
-        $validated = $request->validate([
-            'first_name' => ['required', 'string', 'max:100'],
-            'middle_name' => ['nullable', 'string', 'max:100'],
-            'last_name' => ['required', 'string', 'max:100'],
-            'suffix' => ['nullable', 'string', 'max:20'],
-            'date_of_birth' => ['nullable', 'date'],
-            'gender' => ['nullable', 'string', 'max:50'],
-            'country_region' => ['nullable', 'string', 'max:100'],
-            'mobile_number' => ['nullable', 'string', 'max:30'],
-        ]);
+    Route::get('/settings/users-access', [SettingsController::class, 'usersAccess'])->name('settings.users-access');
+    Route::post('/settings/users-access/invite', [SettingsController::class, 'inviteUser'])->name('settings.users-access.invite');
+    Route::get('/settings/switch-account', [SettingsController::class, 'switchAccount'])->name('settings.switch-account');
+    Route::post('/settings/switch-account/{account?}', [SettingsController::class, 'performSwitchAccount'])->name('settings.switch-account.post');
 
-        $userProfile = UserProfile::firstOrNew(['user_id' => $user->id]);
-        $userProfile->fill($validated);
-        $userProfile->save();
+    Route::get('/settings/security', [SettingsController::class, 'security'])->name('settings.security');
+    Route::post('/settings/security', [SettingsController::class, 'updatePassword'])->name('settings.security.update');
+    Route::post('/settings/security/two-factor', [SettingsController::class, 'toggleTwoFactor'])->name('settings.security.two-factor');
+    Route::post('/settings/security/revoke-sessions', [SettingsController::class, 'revokeOtherSessions'])->name('settings.security.revoke-sessions');
 
-        session([
-            'client.user.first_name' => $userProfile->first_name,
-            'client.user.middle_name' => $userProfile->middle_name ?? '',
-            'client.user.last_name' => $userProfile->last_name,
-            'client.user.suffix' => $userProfile->suffix ?? '',
-            'client.user.date_of_birth' => $userProfile->date_of_birth?->format('Y-m-d') ?? '',
-            'client.user.gender' => $userProfile->gender ?? '',
-            'client.user.country' => $userProfile->country_region ?? '',
-            'client.user.mobile_number' => $userProfile->mobile_number ?? '',
-        ]);
+    Route::get('/settings/general', [SettingsController::class, 'general'])->name('settings.general');
+    Route::post('/settings/general', [SettingsController::class, 'updateGeneral'])->name('settings.general.update');
+    Route::get('/settings/notifications', [SettingsController::class, 'notifications'])->name('settings.notifications');
+    Route::post('/settings/notifications', [SettingsController::class, 'updateNotifications'])->name('settings.notifications.update');
 
-        return redirect()->route('settings.my-account')->with('status', 'Personal profile updated successfully.');
-    })->name('settings.my-account.update');
+    Route::get('/settings/subscription-usage', [SettingsController::class, 'subscriptionUsage'])->name('settings.subscription-usage');
+    Route::post('/settings/subscription-usage/modules', [SettingsController::class, 'selectFreeModules'])->name('settings.subscription-usage.modules');
+    Route::post('/settings/free-modules', [SettingsController::class, 'selectFreeModules'])->name('settings.free-modules.select');
 
-    Route::get('/settings/account-profile', function () {
-        $accountId = session('client.account_id');
-        $account = $accountId ? Account::find($accountId) : null;
-        $profile = $account ? AccountProfile::where('account_id', $account->id)->first() : null;
-
-        return view('settings.account-profile', [
-            'account' => $account,
-            'profile' => $profile,
-        ]);
-    })->name('settings.account-profile');
-
-    Route::post('/settings/account-profile', function (Request $request) {
-        $accountId = session('client.account_id');
-        $account = Account::findOrFail($accountId);
-
-        $validated = $request->validate([
-            'account_type' => ['nullable', 'string', 'max:100'],
-            'legal_name' => ['required', 'string', 'max:255'],
-            'trade_name' => ['nullable', 'string', 'max:255'],
-            'tin' => ['nullable', 'string', 'max:50'],
-            'registration_number' => ['nullable', 'string', 'max:100'],
-            'registration_authority' => ['nullable', 'string', 'max:150'],
-            'registration_date' => ['nullable', 'date'],
-            'industry_profession' => ['nullable', 'string', 'max:150'],
-            'primary_address' => ['nullable', 'string'],
-            'business_email' => ['nullable', 'email', 'max:255'],
-            'contact_number' => ['nullable', 'string', 'max:30'],
-            'website' => ['nullable', 'url', 'max:255'],
-        ]);
-
-        $accountProfile = AccountProfile::firstOrNew(['account_id' => $account->id]);
-        $accountProfile->fill($validated);
-        $accountProfile->save();
-
-        session([
-            'client.account.name' => $accountProfile->legal_name,
-            'client.account.type' => $accountProfile->account_type ?? '',
-        ]);
-
-        return redirect()->route('settings.account-profile')->with('status', 'Account profile updated successfully.');
-    })->name('settings.account-profile.update');
-
-    Route::get('/settings/verification', function () {
-        return view('settings.verification');
-    })->name('settings.verification');
-
-    Route::post('/settings/verification', function (Request $request) {
-        return redirect()->route('settings.verification')->with('status', 'Verification submitted.');
-    })->name('settings.verification.submit');
-
-    Route::get('/settings/users-access', function () {
-        return view('settings.users-access');
-    })->name('settings.users-access');
-
-    Route::get('/settings/switch-account', function () {
-        return view('settings.switch-account');
-    })->name('settings.switch-account');
-
-    Route::get('/settings/security', function () {
-        return view('settings.security');
-    })->name('settings.security');
-
-    Route::get('/settings/general', function () {
-        return view('settings.general');
-    })->name('settings.general');
-
-    Route::get('/settings/notifications', function () {
-        return view('settings.notifications');
-    })->name('settings.notifications');
-
-    Route::get('/settings/subscription-usage', function () {
-        return view('settings.subscription-usage');
-    })->name('settings.subscription-usage');
-
-    Route::get('/settings/policies', function () {
-        return view('settings.policies');
-    })->name('settings.policies');
+    Route::get('/settings/policies', [SettingsController::class, 'policies'])->name('settings.policies');
 
     /*
     |--------------------------------------------------------------------------
     | MODULE SETTINGS
     |--------------------------------------------------------------------------
     */
-    Route::get('/settings/modules/entity-governance', function () {
-        return view('settings.modules.entity-governance');
-    })->name('settings.modules.entity-governance');
-
-    Route::get('/settings/modules/compliance', function () {
-        return view('settings.modules.compliance');
-    })->name('settings.modules.compliance');
-
-    Route::get('/settings/modules/finance', function () {
-        return view('settings.modules.finance');
-    })->name('settings.modules.finance');
-
-    Route::get('/settings/modules/human-capital', function () {
-        return view('settings.modules.human-capital');
-    })->name('settings.modules.human-capital');
-
-    Route::get('/settings/modules/records', function () {
-        return view('settings.modules.records');
-    })->name('settings.modules.records');
-
-    Route::get('/settings/modules/transmittals', function () {
-        return view('settings.modules.transmittals');
-    })->name('settings.modules.transmittals');
+    Route::get('/settings/modules/entity-governance', [SettingsController::class, 'moduleEntityGovernance'])->name('settings.modules.entity-governance');
+    Route::get('/settings/modules/compliance', [SettingsController::class, 'moduleCompliance'])->name('settings.modules.compliance');
+    Route::get('/settings/modules/finance', [SettingsController::class, 'moduleFinance'])->name('settings.modules.finance');
+    Route::get('/settings/modules/human-capital', [SettingsController::class, 'moduleHumanCapital'])->name('settings.modules.human-capital');
+    Route::get('/settings/modules/records', [SettingsController::class, 'moduleRecords'])->name('settings.modules.records');
+    Route::get('/settings/modules/transmittals', [SettingsController::class, 'moduleTransmittals'])->name('settings.modules.transmittals');
 });

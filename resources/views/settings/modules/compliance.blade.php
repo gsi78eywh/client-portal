@@ -8,7 +8,6 @@
 
 <div class="page-header">
 
-```
 <div>
     <div class="card-label">
         MODULE SETTINGS
@@ -23,7 +22,6 @@
         for your client account.
     </p>
 </div>
-```
 
 </div>
 
@@ -31,7 +29,6 @@
 
 <div class="card" style="margin-bottom:24px;">
 
-```
 <div class="card-label">
     MODULE STATUS
 </div>
@@ -69,7 +66,6 @@
     </span>
 
 </div>
-```
 
 </div>
 
@@ -77,7 +73,6 @@
 
 <div class="card" style="margin-bottom:24px;">
 
-```
 <div class="card-label">
     COMPLIANCE PREFERENCES
 </div>
@@ -194,7 +189,6 @@
     </div>
 
 </div>
-```
 
 </div>
 
@@ -202,7 +196,6 @@
 
 <div class="card" style="margin-bottom:24px;">
 
-```
 <div class="card-label">
     REVIEW SETTINGS
 </div>
@@ -281,7 +274,6 @@
     </div>
 
 </div>
-```
 
 </div>
 
@@ -289,7 +281,6 @@
 
 <div class="card" style="margin-bottom:24px;">
 
-```
 <div class="card-label">
     STATUS OPTIONS
 </div>
@@ -394,7 +385,6 @@
     </div>
 
 </div>
-```
 
 </div>
 
@@ -402,7 +392,6 @@
 
 <div class="card">
 
-```
 <div style="
     display:flex;
     justify-content:space-between;
@@ -435,7 +424,6 @@
     </button>
 
 </div>
-```
 
 </div>
 

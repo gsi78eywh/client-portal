@@ -1,0 +1,29 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ordo-client-portal
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    environment:
+      APP_NAME: "ORDO"
+      APP_ENV: "local"
+      APP_DEBUG: "true"
+      APP_URL: "http://localhost:8000"
+      DB_CONNECTION: "sqlite"
+      SESSION_DRIVER: "database"
+      CACHE_STORE: "database"
+      QUEUE_CONNECTION: "database"
+    volumes:
+      # Persistent SQLite database storage
+      - ordo-database:/var/www/html/database
+      # Persistent application uploads and logs
+      - ordo-storage:/var/www/html/storage
+
+volumes:
+  ordo-database:
+    name: ordo_database
+  ordo-storage:
+    name: ordo_storage

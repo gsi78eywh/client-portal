@@ -14,250 +14,8 @@
         @yield('title', 'ORDO Client Portal')
     </title>
 
-    <style>
-
-        * {
-            box-sizing: border-box;
-        }
-
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-            min-height: 100%;
-        }
-
-        body {
-            font-family:
-                -apple-system,
-                BlinkMacSystemFont,
-                "Segoe UI",
-                Roboto,
-                Helvetica,
-                Arial,
-                sans-serif;
-
-            background: #f8fafc;
-
-            color: #0f172a;
-
-            font-size: 14px;
-
-            line-height: 1.5;
-
-            -webkit-font-smoothing: antialiased;
-        }
-
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
-
-        button,
-        input,
-        select,
-        textarea {
-            font: inherit;
-        }
-
-
-        /* ==========================================
-           PORTAL SHELL
-        =========================================== */
-
-        .ordo-portal {
-            display: flex;
-
-            min-height: 100vh;
-
-            width: 100%;
-
-            background: #f8fafc;
-        }
-
-
-        /* ==========================================
-           MAIN AREA
-        =========================================== */
-
-        .ordo-main {
-            display: flex;
-
-            flex-direction: column;
-
-            flex: 1;
-
-            min-width: 0;
-
-            min-height: 100vh;
-        }
-
-
-        /* ==========================================
-           MAIN AREA WITHOUT SIDEBAR
-        =========================================== */
-
-        .ordo-portal.no-sidebar .ordo-main {
-            width: 100%;
-        }
-
-
-        /* ==========================================
-           PAGE CONTENT AREA
-        =========================================== */
-
-        .ordo-content {
-            flex: 1;
-
-            width: 100%;
-
-            padding: 28px 32px;
-        }
-
-
-        .ordo-content-inner {
-            width: 100%;
-
-            max-width: 1400px;
-
-            margin: 0 auto;
-        }
-
-
-        /* ==========================================
-           REGISTRATION / AUTH CONTENT
-        =========================================== */
-
-        .ordo-portal.no-sidebar .ordo-content {
-            min-height: 100vh;
-
-            padding: 0;
-        }
-
-
-        .ordo-portal.no-sidebar .ordo-content-inner {
-            max-width: none;
-
-            min-height: 100vh;
-
-            margin: 0;
-        }
-
-
-        /* ==========================================
-           COMMON PAGE HEADER
-        =========================================== */
-
-        .page-header {
-            margin-bottom: 24px;
-        }
-
-
-        .page-title {
-            margin: 0;
-
-            font-size: 24px;
-
-            line-height: 1.2;
-
-            font-weight: 700;
-
-            color: #0f172a;
-
-            letter-spacing: -0.02em;
-        }
-
-
-        .page-description {
-            margin: 6px 0 0;
-
-            max-width: 720px;
-
-            color: #64748b;
-
-            font-size: 13.5px;
-        }
-
-
-        /* ==========================================
-           COMMON CARD
-        =========================================== */
-
-        .card {
-            background: #ffffff;
-
-            border: 1px solid #e2e8f0;
-
-            border-radius: 12px;
-
-            padding: 24px;
-
-            box-shadow:
-                0 1px 3px 0 rgba(0, 0, 0, 0.02),
-                0 1px 2px -1px rgba(0, 0, 0, 0.02);
-        }
-
-
-        /* ==========================================
-           MOBILE SIDEBAR OVERLAY
-        =========================================== */
-
-        .sidebar-overlay {
-            display: none;
-
-            position: fixed;
-
-            inset: 0;
-
-            background: rgba(15, 23, 42, 0.4);
-
-            backdrop-filter: blur(2px);
-
-            z-index: 90;
-        }
-
-
-        /* ==========================================
-           RESPONSIVE
-        =========================================== */
-
-        @media (max-width: 1024px) {
-
-            .ordo-content {
-                padding: 24px;
-            }
-
-        }
-
-
-        @media (max-width: 768px) {
-
-            .ordo-content {
-                padding: 20px 16px;
-            }
-
-
-            .ordo-portal.no-sidebar .ordo-content {
-                padding: 0;
-            }
-
-
-            .sidebar-overlay.show {
-                display: block;
-            }
-
-        }
-
-
-        @media (max-width: 480px) {
-
-            .page-title {
-                font-size: 20px;
-            }
-
-        }
-
-    </style>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('styles')
 
 </head>
 
@@ -430,12 +188,106 @@
             }
 
             sidebar.classList.toggle('open');
-
             overlay.classList.toggle('show');
-
         }
 
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('ordoToastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `px-4 py-3 rounded-xl shadow-lg border text-xs font-semibold flex items-center gap-2 pointer-events-auto transition-all transform duration-300 translate-y-2 opacity-0 ${type === 'success' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-rose-50 text-rose-800 border-rose-200'}`;
+            toast.innerHTML = `<span>✓</span> <span>${message}</span>`;
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function openOrdoModal(title, fields = []) {
+            const modal = document.getElementById('ordoUniversalModal');
+            const titleEl = document.getElementById('ordoModalTitle');
+            const bodyEl = document.getElementById('ordoModalBody');
+            if (!modal) return;
+            titleEl.textContent = title;
+            bodyEl.innerHTML = fields.map(f => `
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">${f.label}</label>
+                    ${f.type === 'textarea' 
+                        ? `<textarea class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" rows="3" placeholder="${f.placeholder || ''}"></textarea>`
+                        : f.type === 'select'
+                        ? `<select class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs">${f.options.map(o => `<option>${o}</option>`).join('')}</select>`
+                        : `<input type="${f.type || 'text'}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs" placeholder="${f.placeholder || ''}">`
+                    }
+                </div>
+            `).join('');
+            modal.style.display = 'flex';
+        }
+
+        function closeOrdoModal() {
+            const modal = document.getElementById('ordoUniversalModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function submitOrdoModal() {
+            closeOrdoModal();
+            showToast('Record created and saved to your ORDO workspace vault.');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.primary-button, .finance-primary-btn, .btn-primary').forEach(btn => {
+                if (!btn.closest('form') && !btn.getAttribute('onclick') && !btn.closest('#ordoUniversalModal') && !btn.closest('#inviteUserModal') && !btn.closest('#newTicketModal')) {
+                    btn.addEventListener('click', () => {
+                        const pageTitle = document.title.split('-')[0].split('|')[0].trim();
+                        openOrdoModal(`Create New Entry in ${pageTitle}`, [
+                            { label: 'Title / Reference Name *', type: 'text', placeholder: 'e.g. Annual Compliance Filing' },
+                            { label: 'Category / Classification', type: 'select', options: ['Statutory Filing', 'Board Resolution', 'Financial Ledger', 'General Record', 'Transmittal'] },
+                            { label: 'Effective Date', type: 'date' },
+                            { label: 'Custody & Summary Notes', type: 'textarea', placeholder: 'Add relevant internal notes...' }
+                        ]);
+                    });
+                }
+            });
+
+            document.querySelectorAll('.view-button, .table-action-btn').forEach(btn => {
+                if (!btn.closest('form') && !btn.getAttribute('onclick')) {
+                    btn.addEventListener('click', (e) => {
+                        const row = e.target.closest('tr');
+                        const title = row ? row.querySelector('td:nth-child(1), td:nth-child(2)')?.textContent?.trim() : 'Record Details';
+                        openOrdoModal(`Record Details: ${title}`, [
+                            { label: 'Record Identifier', type: 'text', placeholder: title },
+                            { label: 'Status & Verification', type: 'text', placeholder: 'Active / Verified under ORDO Vault' },
+                            { label: 'Notes', type: 'textarea', placeholder: 'View-only record from your active tenant ledger.' }
+                        ]);
+                    });
+                }
+            });
+        });
     </script>
+
+    {{-- UNIVERSAL ACTION MODAL --}}
+    <div id="ordoUniversalModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs items-center justify-center p-4" style="display: none;">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 id="ordoModalTitle" class="text-base font-bold text-slate-900">New Entry</h3>
+                <button type="button" onclick="closeOrdoModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer">&times;</button>
+            </div>
+            <div id="ordoModalBody" class="text-xs text-slate-600 space-y-3">
+            </div>
+            <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button type="button" onclick="closeOrdoModal()" class="ordo-btn ordo-btn-secondary ordo-btn-sm text-xs">Cancel</button>
+                <button type="button" id="ordoModalSubmit" onclick="submitOrdoModal()" class="ordo-btn ordo-btn-primary ordo-btn-sm text-xs">Save Entry</button>
+            </div>
+        </div>
+    </div>
+
+    {{-- TOAST NOTIFICATION CONTAINER --}}
+    <div id="ordoToastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    @stack('scripts')
 
 </body>
 

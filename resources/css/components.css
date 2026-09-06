@@ -1,0 +1,1303 @@
+/* ==========================================================================
+   ORDO COMPONENTS DESIGN SYSTEM
+   Sidebar, Breadcrumbs, Module Cards, Progress Cards, Status Badges
+   ========================================================================== */
+
+
+/* ==========================================================================
+   EXTRACTED FROM: components/breadcrumbs.blade.php
+   ========================================================================== */
+.ordo-breadcrumbs {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+
+        gap: 8px;
+
+        margin-bottom: 18px;
+
+        font-size: 13px;
+    }
+
+    .breadcrumb-home,
+    .breadcrumb-link {
+        color: #6b7280;
+
+        transition: color 0.2s ease;
+    }
+
+    .breadcrumb-home:hover,
+    .breadcrumb-link:hover {
+        color: #1d4ed8;
+    }
+
+    .breadcrumb-separator {
+        color: #d1d5db;
+    }
+
+    .breadcrumb-current {
+        color: #111827;
+        font-weight: 500;
+    }
+
+    @media (max-width: 600px) {
+
+        .ordo-breadcrumbs {
+            font-size: 12px;
+        }
+
+    }
+
+/* ==========================================================================
+   EXTRACTED FROM: components/module-card.blade.php
+   ========================================================================== */
+/* ==========================================
+       MODULE CARD
+    =========================================== */
+
+    .ordo-module-card {
+
+        display: flex;
+
+        flex-direction: column;
+
+        min-height: 250px;
+
+        background: #ffffff;
+
+        border: 1px solid #e5e7eb;
+
+        border-radius: 10px;
+
+        padding: 20px;
+
+        transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease,
+            transform 0.2s ease;
+
+    }
+
+
+    .ordo-module-card:hover {
+
+        border-color: #d1d5db;
+
+        box-shadow: 0 5px 18px rgba(0, 0, 0, 0.05);
+
+        transform: translateY(-1px);
+
+    }
+
+
+    /* ==========================================
+       LOCKED
+    =========================================== */
+
+    .ordo-module-card.module-locked {
+
+        background: #fafafa;
+
+    }
+
+
+    .ordo-module-card.module-locked:hover {
+
+        transform: none;
+
+        box-shadow: none;
+
+    }
+
+
+    /* ==========================================
+       HEADER
+    =========================================== */
+
+    .module-card-header {
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 12px;
+
+        margin-bottom: 20px;
+
+    }
+
+
+    .module-icon {
+
+        width: 42px;
+
+        height: 42px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        flex-shrink: 0;
+
+        border-radius: 9px;
+
+        background: #f3f4f6;
+
+        color: #111827;
+
+        font-size: 18px;
+
+        font-weight: 600;
+
+    }
+
+
+    /* ==========================================
+       BODY
+    =========================================== */
+
+    .module-card-body {
+
+        flex: 1;
+
+    }
+
+
+    .module-card-title {
+
+        margin: 0;
+
+        font-size: 16px;
+
+        font-weight: 650;
+
+        color: #111827;
+
+    }
+
+
+    .module-card-description {
+
+        margin: 8px 0 0;
+
+        font-size: 13px;
+
+        line-height: 1.55;
+
+        color: #6b7280;
+
+    }
+
+
+    /* ==========================================
+       USAGE
+    =========================================== */
+
+    .module-usage {
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 15px;
+
+        margin-top: 18px;
+
+        padding-top: 13px;
+
+        border-top: 1px solid #f0f0f0;
+
+    }
+
+
+    .module-usage-label {
+
+        font-size: 11px;
+
+        color: #9ca3af;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.5px;
+
+    }
+
+
+    .module-usage-value {
+
+        font-size: 12px;
+
+        font-weight: 600;
+
+        color: #374151;
+
+    }
+
+
+    /* ==========================================
+       FOOTER
+    =========================================== */
+
+    .module-card-footer {
+
+        margin-top: 20px;
+
+    }
+
+
+    .module-action {
+
+        width: 100%;
+
+        min-height: 38px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        padding: 8px 12px;
+
+        background: #111827;
+
+        color: #ffffff;
+
+        border-radius: 7px;
+
+        font-size: 12px;
+
+        font-weight: 600;
+
+        transition: background 0.2s ease;
+
+    }
+
+
+    .module-action:hover {
+
+        background: #374151;
+
+    }
+
+
+    .module-action-locked {
+
+        background: #f3f4f6;
+
+        color: #6b7280;
+
+        border: 1px solid #d1d5db;
+
+    }
+
+
+    .module-action-locked:hover {
+
+        background: #e5e7eb;
+
+    }
+
+
+    /* ==========================================
+       MOBILE
+    =========================================== */
+
+    @media (max-width: 600px) {
+
+        .ordo-module-card {
+
+            min-height: auto;
+
+            padding: 18px;
+
+        }
+
+    }
+
+/* ==========================================================================
+   EXTRACTED FROM: components/progress-card.blade.php
+   ========================================================================== */
+.ordo-progress-card {
+
+        background: #ffffff;
+
+        border: 1px solid #e5e7eb;
+
+        border-radius: 10px;
+
+        padding: 22px;
+
+    }
+
+
+    /* ==============================
+       HEADER
+    ============================== */
+
+    .progress-card-header {
+
+        display: flex;
+
+        align-items: flex-start;
+
+        justify-content: space-between;
+
+        gap: 20px;
+
+        margin-bottom: 16px;
+
+    }
+
+
+    .progress-card-title {
+
+        margin: 0;
+
+        font-size: 16px;
+
+        font-weight: 600;
+
+        color: #111827;
+
+    }
+
+
+    .progress-card-description {
+
+        margin: 6px 0 0;
+
+        font-size: 13px;
+
+        line-height: 1.5;
+
+        color: #6b7280;
+
+    }
+
+
+    .progress-percentage {
+
+        flex-shrink: 0;
+
+        font-size: 14px;
+
+        font-weight: 700;
+
+        color: #111827;
+
+    }
+
+
+    /* ==============================
+       PROGRESS BAR
+    ============================== */
+
+    .progress-track {
+
+        width: 100%;
+
+        height: 8px;
+
+        overflow: hidden;
+
+        background: #e5e7eb;
+
+        border-radius: 999px;
+
+    }
+
+
+    .progress-fill {
+
+        height: 100%;
+
+        background: #1d4ed8;
+
+        border-radius: 999px;
+
+        transition: width 0.3s ease;
+
+    }
+
+
+    /* ==============================
+       OPTIONAL CONTENT
+    ============================== */
+
+    .progress-card-content {
+
+        margin-top: 18px;
+
+        padding-top: 18px;
+
+        border-top: 1px solid #f0f0f0;
+
+    }
+
+
+    /* ==============================
+       FOOTER
+    ============================== */
+
+    .progress-card-footer {
+
+        margin-top: 18px;
+
+    }
+
+
+    .progress-action {
+
+        display: inline-flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        min-height: 38px;
+
+        padding: 8px 15px;
+
+        background: #111827;
+
+        color: #ffffff;
+
+        border-radius: 7px;
+
+        font-size: 13px;
+
+        font-weight: 600;
+
+        transition: 0.2s ease;
+
+    }
+
+
+    .progress-action:hover {
+
+        background: #374151;
+
+    }
+
+
+    /* ==============================
+       MOBILE
+    ============================== */
+
+    @media (max-width: 600px) {
+
+        .ordo-progress-card {
+
+            padding: 18px;
+
+        }
+
+
+        .progress-card-header {
+
+            gap: 12px;
+
+        }
+
+
+        .progress-card-title {
+
+            font-size: 15px;
+
+        }
+
+
+        .progress-card-description {
+
+            font-size: 12px;
+
+        }
+
+    }
+
+/* ==========================================================================
+   EXTRACTED FROM: components/settings-sidebar.blade.php
+   ========================================================================== */
+.settings-sidebar {
+
+        width: 250px;
+
+        flex-shrink: 0;
+
+        background: #ffffff;
+
+        border: 1px solid #e5e7eb;
+
+        border-radius: 10px;
+
+        padding: 18px;
+
+        height: fit-content;
+
+    }
+
+
+    /* ==========================================
+       HEADER
+    =========================================== */
+
+    .settings-sidebar-header {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 12px;
+
+        padding-bottom: 18px;
+
+        margin-bottom: 18px;
+
+        border-bottom: 1px solid #e5e7eb;
+
+    }
+
+
+    .settings-sidebar-icon {
+
+        width: 38px;
+
+        height: 38px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        flex-shrink: 0;
+
+        background: #f3f4f6;
+
+        border-radius: 8px;
+
+        color: #111827;
+
+        font-size: 17px;
+
+    }
+
+
+    .settings-sidebar-header h2 {
+
+        margin: 0;
+
+        font-size: 15px;
+
+        font-weight: 650;
+
+        color: #111827;
+
+    }
+
+
+    .settings-sidebar-header p {
+
+        margin: 3px 0 0;
+
+        font-size: 11px;
+
+        color: #9ca3af;
+
+    }
+
+
+    /* ==========================================
+       SECTION
+    =========================================== */
+
+    .settings-sidebar-section {
+
+        margin-bottom: 22px;
+
+    }
+
+
+    .settings-sidebar-title {
+
+        margin-bottom: 7px;
+
+        font-size: 10px;
+
+        font-weight: 700;
+
+        letter-spacing: 0.7px;
+
+        color: #9ca3af;
+
+    }
+
+
+    /* ==========================================
+       LINKS
+    =========================================== */
+
+    .settings-sidebar-link {
+
+        display: flex;
+
+        align-items: center;
+
+        min-height: 36px;
+
+        padding: 7px 10px;
+
+        margin-bottom: 2px;
+
+        border-radius: 6px;
+
+        color: #4b5563;
+
+        font-size: 12px;
+
+        transition:
+            background 0.2s ease,
+            color 0.2s ease;
+
+    }
+
+
+    .settings-sidebar-link:hover {
+
+        background: #f9fafb;
+
+        color: #111827;
+
+    }
+
+
+    .settings-sidebar-link.active {
+
+        background: #f3f4f6;
+
+        color: #111827;
+
+        font-weight: 600;
+
+    }
+
+
+    /* ==========================================
+       FOOTER
+    =========================================== */
+
+    .settings-sidebar-footer {
+
+        padding-top: 15px;
+
+        border-top: 1px solid #e5e7eb;
+
+    }
+
+
+    .settings-back-link {
+
+        display: block;
+
+        padding: 8px 10px;
+
+        color: #6b7280;
+
+        font-size: 12px;
+
+        border-radius: 6px;
+
+    }
+
+
+    .settings-back-link:hover {
+
+        background: #f9fafb;
+
+        color: #111827;
+
+    }
+
+
+    /* ==========================================
+       MOBILE
+    =========================================== */
+
+    @media (max-width: 768px) {
+
+        .settings-sidebar {
+
+            width: 100%;
+
+        }
+
+    }
+
+/* ==========================================================================
+   EXTRACTED FROM: components/sidebar.blade.php
+   ========================================================================== */
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.ordo-sidebar {
+    width: 250px;
+    flex-shrink: 0;
+
+    min-height: 100vh;
+
+    background: #ffffff;
+
+    border-right: 1px solid #e5e7eb;
+
+    display: flex;
+    flex-direction: column;
+
+    position: sticky;
+    top: 0;
+
+    height: 100vh;
+
+    z-index: 100;
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+}
+
+
+
+/* =========================================================
+   BRAND
+========================================================= */
+
+.sidebar-brand {
+    height: 64px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 20px;
+
+    border-bottom: 1px solid #f1f5f9;
+
+    flex-shrink: 0;
+}
+
+
+.brand-logo {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+}
+
+
+.logo-icon {
+    width: 32px;
+    height: 32px;
+
+    background: #0f172a;
+
+    color: #ffffff;
+
+    border-radius: 8px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-weight: 800;
+    font-size: 16px;
+}
+
+
+.logo-text h1 {
+    margin: 0;
+
+    font-size: 15px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.5px;
+
+    color: #0f172a;
+
+    line-height: 1.1;
+}
+
+
+.logo-text .company-subtext {
+    display: block;
+
+    font-family:
+        Georgia,
+        "Times New Roman",
+        Times,
+        serif;
+
+    font-size: 11px;
+
+    color: #1e293b;
+
+    font-weight: 500;
+
+    letter-spacing: -0.2px;
+
+    margin-top: 1px;
+}
+
+
+.logo-text .ampersand {
+    color: #3b82f6;
+
+    font-style: italic;
+
+    font-weight: 600;
+}
+
+
+
+/* =========================================================
+   SIDEBAR CONTENT
+========================================================= */
+
+.sidebar-content {
+    display: flex;
+
+    flex-direction: column;
+
+    flex: 1;
+
+    min-height: 0;
+
+    overflow-y: auto;
+
+    padding: 16px 12px;
+}
+
+
+.sidebar-section {
+    margin-bottom: 20px;
+}
+
+
+.sidebar-section-title {
+    padding: 0 10px;
+
+    margin-bottom: 6px;
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.8px;
+
+    color: #94a3b8;
+}
+
+
+
+/* =========================================================
+   SIDEBAR LINKS
+========================================================= */
+
+.sidebar-link {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 8px 12px;
+
+    margin-bottom: 2px;
+
+    border-radius: 8px;
+
+    color: #475569;
+
+    font-size: 13px;
+
+    font-weight: 500;
+
+    text-decoration: none;
+
+    transition:
+        background 0.15s ease,
+        color 0.15s ease;
+}
+
+
+.sidebar-link:hover {
+    background: #f8fafc;
+
+    color: #0f172a;
+}
+
+
+.sidebar-link.active {
+    background: #eff6ff;
+
+    color: #2563eb;
+
+    font-weight: 600;
+}
+
+
+
+/* =========================================================
+   SIDEBAR ICON
+========================================================= */
+
+.sidebar-icon {
+    width: 18px;
+
+    height: 18px;
+
+    color: #64748b;
+
+    flex-shrink: 0;
+}
+
+
+.sidebar-link.active .sidebar-icon {
+    color: #2563eb;
+}
+
+
+.link-label {
+    flex: 1;
+
+    min-width: 0;
+}
+
+
+
+/* =========================================================
+   30d BADGE
+========================================================= */
+
+.badge-tag {
+    font-size: 10px;
+
+    font-weight: 600;
+
+    color: #2563eb;
+
+    background: #eff6ff;
+
+    padding: 2px 6px;
+
+    border-radius: 4px;
+
+    flex-shrink: 0;
+}
+
+
+
+/* =========================================================
+   NUMBER BADGE
+========================================================= */
+
+.num-badge {
+    font-size: 11px;
+
+    font-weight: 600;
+
+    color: #2563eb;
+
+    background: #eff6ff;
+
+    width: 18px;
+
+    height: 18px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    flex-shrink: 0;
+}
+
+
+
+/* =========================================================
+   BOTTOM AREA
+========================================================= */
+
+.sidebar-bottom {
+    margin-top: auto;
+
+    padding-top: 12px;
+
+    border-top: 1px solid #f1f5f9;
+}
+
+
+
+/* =========================================================
+   USER PROFILE
+========================================================= */
+
+.user-profile-widget {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 10px;
+
+    margin-top: 8px;
+
+    border-radius: 8px;
+
+    background: #f8fafc;
+}
+
+
+.user-avatar {
+    width: 30px;
+
+    height: 30px;
+
+    border-radius: 50%;
+
+    background: #0f172a;
+
+    color: #ffffff;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    flex-shrink: 0;
+}
+
+
+.user-info {
+    display: flex;
+
+    flex-direction: column;
+
+    min-width: 0;
+}
+
+
+.user-name {
+    font-size: 12px;
+
+    font-weight: 600;
+
+    color: #0f172a;
+
+    line-height: 1.2;
+
+    white-space: nowrap;
+}
+
+
+.user-role {
+    font-size: 10px;
+
+    color: #64748b;
+
+    white-space: nowrap;
+}
+
+
+
+/* =========================================================
+   SIDEBAR SCROLLBAR
+========================================================= */
+
+.sidebar-content::-webkit-scrollbar {
+    width: 5px;
+}
+
+
+.sidebar-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+.sidebar-content::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+
+    border-radius: 10px;
+}
+
+
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .ordo-sidebar {
+        width: 230px;
+    }
+
+}
+
+
+@media (max-width: 768px) {
+
+    .ordo-sidebar {
+        width: 250px;
+    }
+
+}
+
+/* ==========================================================================
+   EXTRACTED FROM: components/status-badge.blade.php
+   ========================================================================== */
+.ordo-status-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        min-height: 24px;
+
+        padding: 4px 9px;
+
+        border-radius: 999px;
+
+        font-size: 11px;
+        font-weight: 600;
+
+        line-height: 1;
+
+        white-space: nowrap;
+
+        border: 1px solid transparent;
+    }
+
+    /* Trial */
+
+    .status-trial {
+        background: #eff6ff;
+        color: #2563eb;
+        border-color: #bfdbfe;
+    }
+
+    /* Free */
+
+    .status-free {
+        background: #f0fdf4;
+        color: #15803d;
+        border-color: #bbf7d0;
+    }
+
+    /* Active */
+
+    .status-active,
+    .status-verified {
+        background: #ecfdf5;
+        color: #047857;
+        border-color: #a7f3d0;
+    }
+
+    /* Pending */
+
+    .status-pending,
+    .status-progress,
+    .status-submitted {
+        background: #fffbeb;
+        color: #b45309;
+        border-color: #fde68a;
+    }
+
+    /* Warning */
+
+    .status-warning {
+        background: #fff7ed;
+        color: #c2410c;
+        border-color: #fed7aa;
+    }
+
+    /* Rejected */
+
+    .status-rejected,
+    .status-cancelled {
+        background: #fef2f2;
+        color: #b91c1c;
+        border-color: #fecaca;
+    }
+
+    /* Limited */
+
+    .status-limited {
+        background: #fff7ed;
+        color: #c2410c;
+        border-color: #fed7aa;
+    }
+
+    /* Locked */
+
+    .status-locked {
+        background: #f3f4f6;
+        color: #6b7280;
+        border-color: #d1d5db;
+    }
+
+    /* Suspended */
+
+    .status-suspended {
+        background: #fef2f2;
+        color: #991b1b;
+        border-color: #fecaca;
+    }
+
+    /* Past Due */
+
+    .status-past-due {
+        background: #fff7ed;
+        color: #9a3412;
+        border-color: #fed7aa;
+    }
+
+    /* Not Started */
+
+    .status-not-started {
+        background: #f9fafb;
+        color: #6b7280;
+        border-color: #e5e7eb;
+    }
+
+    /* Default */
+
+    .status-default {
+        background: #f9fafb;
+        color: #4b5563;
+        border-color: #e5e7eb;
+    }
