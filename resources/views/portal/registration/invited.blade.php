@@ -3,580 +3,186 @@
 @section('title', 'Join Existing Account — ORDO')
 
 @section('content')
-<div class="registration-page">
-        <div class="form-panel-inner">
+@php
+    $information = $information ?? session('registration.information', []);
+    $invitationCode  = old('invitation_code',  $information['invitation_code']  ?? '');
+    $invitationEmail = old('invitation_email', $information['invitation_email'] ?? '');
 
+    // Read-only values resolved from the invitation DB record by the controller
+    $invitationStatus = $information['invitation_status'] ?? null;
+    $existingAccount  = $information['existing_account']  ?? [];
+    $orgName          = $existingAccount['name']       ?? null;
+    $orgRole          = $existingAccount['role']       ?? null;
+    $invitedBy        = $existingAccount['invited_by'] ?? null;
+@endphp
 
-            {{-- =================================================
-                 TOP BAR
-            ================================================== --}}
+<div class="auth-panel wide" id="invitedPanel">
+    <div class="kicker">JOIN YOUR ORDO WORKSPACE</div>
+    <h2>Join an existing ORDO account</h2>
+    <p>You were invited to join an existing organization. Enter your invitation details to verify your access.</p>
 
-            <div class="registration-topbar">
+    <div class="step-label">
+        <span>Step 3 of 7 &mdash; Invitation Details</span>
+        <span style="color: var(--blue);">43%</span>
+    </div>
+    <div class="wizard-top">
+        <span class="wizard-step on" aria-label="Step 1 complete"></span>
+        <span class="wizard-step on" aria-label="Step 2 complete"></span>
+        <span class="wizard-step on" aria-label="Step 3 active"></span>
+        <span class="wizard-step" aria-label="Step 4"></span>
+        <span class="wizard-step" aria-label="Step 5"></span>
+        <span class="wizard-step" aria-label="Step 6"></span>
+        <span class="wizard-step" aria-label="Step 7"></span>
+    </div>
 
-                <div class="signin-text">
+    @if (session('success'))
+        <div class="alert alert-success" role="status">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            {{ session('success') }}
+        </div>
+    @endif
 
-                    Already have an account?
+    @if ($errors->any())
+        <div class="alert alert-error" role="alert">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <ul style="margin:0;padding-left:18px;">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-                    <a href="{{ route('login') }}">
-                        Sign in
-                    </a>
+    {{-- Account Category Summary Badge --}}
+    <div class="account-badge">
+        <div class="account-badge-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <path d="M19 8v6"/><path d="M22 11h-6"/>
+            </svg>
+        </div>
+        <div>
+            <div class="account-badge-title">Invited Member Account</div>
+            <div class="account-badge-description">Joining an existing workspace managed by an account administrator.</div>
+        </div>
+    </div>
 
-                </div>
+    <form method="POST" action="{{ route('invited.update') }}" id="invitedForm" novalidate>
+        @csrf
 
-            </div>
-
-
-            {{-- =================================================
-                 PROGRESS
-            ================================================== --}}
-
-            <div
-                class="registration-progress"
-                aria-label="Registration progress"
-            >
-
-                <div
-                    class="progress-segment completed"
-                    title="About you — completed"
-                ></div>
-
-                <div
-                    class="progress-segment completed"
-                    title="Account — completed"
-                ></div>
-
-                <div
-                    class="progress-segment active"
-                    aria-current="step"
-                    title="Details — current step"
-                ></div>
-
-                <div
-                    class="progress-segment"
-                    title="Contact"
-                ></div>
-
-                <div
-                    class="progress-segment"
-                    title="Verify"
-                ></div>
-
-                <div
-                    class="progress-segment"
-                    title="Security"
-                ></div>
-
-            </div>
-
-
-            {{-- =================================================
-                 PAGE HEADER
-            ================================================== --}}
-
-            <header class="registration-header">
-
-                <div class="registration-eyebrow">
-                    JOIN YOUR ORDO WORKSPACE
-                </div>
-
-                <h2>
-                    Join an existing ORDO account
-                </h2>
-
-                <p>
-                    You were invited to join an existing ORDO account.
-                    Enter the invitation information below to continue.
-                </p>
-
-            </header>
-
-
-            {{-- =================================================
-                 INFORMATION NOTICE
-            ================================================== --}}
-
-            <div class="information-note">
-
-                <div class="information-note-icon">
-
-                    <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                    >
-
-                        <circle
-                            cx="12"
-                            cy="12"
-                            r="9"
-                        />
-
-                        <path d="M12 11V16"/>
-                        <path d="M12 8H12.01"/>
-
-                    </svg>
-
-                </div>
-
-                <div>
-
-                    <strong>
-                        You're joining an existing account.
-                    </strong>
-
-                    This will not create a new business,
-                    organization, or ORDO workspace.
-                    Your access will be connected to the
-                    account associated with your invitation.
-
-                </div>
-
-            </div>
-
-
-            {{-- =================================================
-                 VALIDATION
-            ================================================== --}}
-
-            @if ($errors->any())
-
-                <div
-                    class="form-alert"
-                    role="alert"
-                    aria-live="polite"
+        <div class="form-grid">
+            {{-- Invitation Code --}}
+            <div>
+                <label class="label" for="invitation_code">Invitation code <span style="color:var(--red)">*</span></label>
+                <input
+                    type="text"
+                    id="invitation_code"
+                    name="invitation_code"
+                    class="input @error('invitation_code') has-error @enderror"
+                    value="{{ $invitationCode }}"
+                    placeholder="e.g. INV-92841"
+                    required
+                    autofocus
                 >
-
-                    <div class="form-alert-icon">
-                        !
-                    </div>
-
-                    <div class="form-alert-content">
-
-                        <strong>
-                            Please check the information below.
-                        </strong>
-
-                        <ul>
-
-                            @foreach ($errors->all() as $error)
-
-                                <li>
-                                    {{ $error }}
-                                </li>
-
-                            @endforeach
-
-                        </ul>
-
-                    </div>
-
-                </div>
-
-            @endif
-
-
-            {{-- =================================================
-                 FORM
-            ================================================== --}}
-
-            <form
-                method="POST"
-                action="{{ route('invited.update') }}"
-                class="registration-form"
-            >
-
-                @csrf
-
-
-                <section class="invitation-card">
-
-
-                    {{-- =================================================
-                         INVITATION HEADER
-                    ================================================== --}}
-
-                    <div class="invitation-card-header">
-
-                        <div class="invitation-icon">
-
-                            <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="1.8"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                aria-hidden="true"
-                            >
-
-                                <path
-                                    d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"
-                                />
-
-                                <circle
-                                    cx="9"
-                                    cy="7"
-                                    r="4"
-                                />
-
-                                <path d="M19 8v6"/>
-                                <path d="M22 11h-6"/>
-
-                            </svg>
-
-                        </div>
-
-                        <div class="invitation-heading">
-
-                            <strong>
-                                Invitation details
-                            </strong>
-
-                            <p>
-                                Use the invitation code and email
-                                address provided by the account administrator.
-                            </p>
-
-                        </div>
-
-                    </div>
-
-
-                    {{-- =================================================
-                         INVITATION CODE
-                    ================================================== --}}
-
-                    <div class="form-group">
-
-                        <label for="invitation_code">
-
-                            Invitation Code
-
-                            <span class="required">
-                                *
-                            </span>
-
-                        </label>
-
-                        <input
-                            type="text"
-                            id="invitation_code"
-                            name="invitation_code"
-                            value="{{ old(
-                                'invitation_code',
-                                session('registration.invitation.invitation_code', '')
-                            ) }}"
-                            placeholder="Enter your invitation code"
-                            autocomplete="one-time-code"
-                            spellcheck="false"
-                            maxlength="255"
-                            class="{{ $errors->has('invitation_code') ? 'input-error' : '' }}"
-                            aria-describedby="invitation-code-help"
-                            aria-invalid="{{ $errors->has('invitation_code') ? 'true' : 'false' }}"
-                            required
-                        >
-
-                        @error('invitation_code')
-
-                            <div
-                                class="field-error"
-                                id="invitation-code-help"
-                            >
-                                {{ $message }}
-                            </div>
-
-                        @else
-
-                            <div
-                                class="field-hint"
-                                id="invitation-code-help"
-                            >
-                                Enter the code included in your ORDO invitation.
-                            </div>
-
-                        @enderror
-
-                    </div>
-
-
-                    {{-- =================================================
-                         EMAIL
-                    ================================================== --}}
-
-                    <div class="form-group">
-
-                        <label for="invitation_email">
-
-                            Invitation Email Address
-
-                            <span class="required">
-                                *
-                            </span>
-
-                        </label>
-
-                        <input
-                            type="email"
-                            id="invitation_email"
-                            name="invitation_email"
-                            value="{{ old(
-                                'invitation_email',
-                                session('registration.invitation.invitation_email', '')
-                            ) }}"
-                            placeholder="you@example.com"
-                            autocomplete="email"
-                            maxlength="255"
-                            class="{{ $errors->has('invitation_email') ? 'input-error' : '' }}"
-                            aria-describedby="invitation-email-help"
-                            aria-invalid="{{ $errors->has('invitation_email') ? 'true' : 'false' }}"
-                            required
-                        >
-
-                        @error('invitation_email')
-
-                            <div
-                                class="field-error"
-                                id="invitation-email-help"
-                            >
-                                {{ $message }}
-                            </div>
-
-                        @else
-
-                            <div
-                                class="field-hint"
-                                id="invitation-email-help"
-                            >
-                                Use the email address that received the invitation.
-                            </div>
-
-                        @enderror
-
-                    </div>
-
-
-                    {{-- =================================================
-                         INVITATION PREVIEW
-                    ================================================== --}}
-
-                    @php
-
-                        $preview =
-                            session('registration.invitation_preview')
-                            ??
-                            session('registration.invitation.existing_account')
-                            ??
-                            ($information['existing_account'] ?? null);
-
-                    @endphp
-
-
-                    @if ($preview)
-
-                        <div class="preview">
-
-                            <div class="preview-label">
-                                Invitation found
-                            </div>
-
-
-                            <div class="preview-row">
-
-                                <span class="preview-key">
-                                    Account
-                                </span>
-
-                                <span class="preview-value">
-
-                                    {{ $preview['name']
-                                        ?? $preview['account_name']
-                                        ?? 'Existing ORDO Account' }}
-
-                                </span>
-
-                            </div>
-
-
-                            <div class="preview-row">
-
-                                <span class="preview-key">
-                                    Invited role
-                                </span>
-
-                                <span class="preview-value">
-
-                                    {{ $preview['role']
-                                        ?? 'Member / Staff' }}
-
-                                </span>
-
-                            </div>
-
-
-                            <div class="preview-row">
-
-                                <span class="preview-key">
-                                    Invited by
-                                </span>
-
-                                <span class="preview-value">
-
-                                    {{ $preview['invited_by']
-                                        ?? 'Account Administrator' }}
-
-                                </span>
-
-                            </div>
-
-                        </div>
-
-                    @endif
-
-                </section>
-
-
-                {{-- =================================================
-                     KEEP SIMPLE NOTE
-                ================================================== --}}
-
-                <div class="keep-simple">
-
-                    <div class="keep-simple-icon">
-
-                        <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true"
-                        >
-
-                            <circle
-                                cx="12"
-                                cy="12"
-                                r="9"
-                            />
-
-                            <path d="M12 11V16"/>
-                            <path d="M12 8H12.01"/>
-
-                        </svg>
-
-                    </div>
-
-                    <div>
-
-                        <strong>
-                            Keep it simple for now.
-                        </strong>
-
-                        <p>
-                            We only need your invitation details to
-                            connect you to the existing workspace.
-                            Additional account information can be
-                            completed later.
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                {{-- =================================================
-                     ACTIONS
-                ================================================== --}}
-
-                <div class="registration-actions">
-
-
-                    {{-- BACK --}}
-
-                    <a
-                        href="{{ route('register.account') }}"
-                        class="btn btn-secondary"
-                    >
-
-                        <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true"
-                        >
-
-                            <path d="M19 12H5"/>
-                            <path d="M11 18L5 12L11 6"/>
-
-                        </svg>
-
-                        <span>
-                            Back
-                        </span>
-
-                    </a>
-
-
-                    {{-- CONTINUE --}}
-
-                    <button
-                        type="submit"
-                        class="btn btn-primary"
-                    >
-
-                        <span>
-                            Continue
-                        </span>
-
-                        <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true"
-                        >
-
-                            <path d="M5 12H19"/>
-                            <path d="M13 6L19 12L13 18"/>
-
-                        </svg>
-
-                    </button>
-
-                </div>
-
-            </form>
-
-
-            {{-- =================================================
-                 FOOTER
-            ================================================== --}}
-
-            <footer class="registration-footer">
-
-                <strong>
-                    ORDO
-                </strong>
-
-                <span>
-                    •
-                </span>
-
-                <span>
-                    Secure account registration
-                </span>
-
-            </footer>
+                <div class="field-hint">Code provided in your invitation email or memo.</div>
+                @error('invitation_code')
+                    <span class="field-error">{{ $message }}</span>
+                @enderror
+            </div>
+
+            {{-- Invitation Email --}}
+            <div>
+                <label class="label" for="invitation_email">Invited email address <span style="color:var(--red)">*</span></label>
+                <input
+                    type="email"
+                    id="invitation_email"
+                    name="invitation_email"
+                    class="input @error('invitation_email') has-error @enderror"
+                    value="{{ $invitationEmail }}"
+                    placeholder="you@company.com"
+                    autocomplete="email"
+                    required
+                >
+                <div class="field-hint">Must match the email address the invitation was sent to.</div>
+                @error('invitation_email')
+                    <span class="field-error">{{ $message }}</span>
+                @enderror
+            </div>
 
         </div>
+
+        {{-- ── Invitation Verified Panel (shown after successful DB lookup) ── --}}
+        @if ($invitationStatus === 'found' && $orgName)
+        <div id="inviteConfirmBox" style="
+            margin-top: 20px;
+            padding: 16px 18px;
+            background: #f0fdf4;
+            border: 1.5px solid #bbf7d0;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        ">
+            <div style="color: #16a34a; margin-top: 2px; flex-shrink: 0;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <div style="flex: 1;">
+                <div style="font-size: 13px; font-weight: 600; color: #15803d; margin-bottom: 8px;">
+                    Invitation verified &mdash; you are joining:
+                </div>
+                <table style="font-size: 12.5px; border-collapse: collapse; width: 100%;">
+                    <tr>
+                        <td style="color: var(--muted); padding: 3px 0; width: 130px; white-space: nowrap;">Organization</td>
+                        <td style="color: var(--ink); font-weight: 600; padding: 3px 0;">{{ $orgName }}</td>
+                    </tr>
+                    @if ($orgRole)
+                    <tr>
+                        <td style="color: var(--muted); padding: 3px 0;">Assigned role</td>
+                        <td style="color: var(--ink); padding: 3px 0;">{{ $orgRole }}</td>
+                    </tr>
+                    @endif
+                    @if ($invitedBy)
+                    <tr>
+                        <td style="color: var(--muted); padding: 3px 0;">Invited by</td>
+                        <td style="color: var(--ink); padding: 3px 0;">{{ $invitedBy }}</td>
+                    </tr>
+                    @endif
+                </table>
+                <div style="margin-top: 8px; font-size: 11.5px; color: var(--muted);">
+                    Your role and access permissions are determined by the invitation and cannot be changed here.
+                </div>
+            </div>
+        </div>
+        @endif
+
+        {{-- Guidance Box (shown when invite not yet verified) --}}
+        @if (!($invitationStatus === 'found' && $orgName))
+        <div style="margin-top: 24px; padding: 14px 16px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: var(--radius-sm); display: flex; align-items: flex-start; gap: 12px;">
+            <div style="color: var(--blue); margin-top: 1px; flex-shrink: 0;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            </div>
+            <div style="font-size: 12.5px; color: var(--muted); line-height: 1.5;">
+                <strong style="color: var(--ink); display: block; margin-bottom: 2px;">Connecting to an existing account</strong>
+                Your invitation code determines your organization, role, and access permissions. No manual selection is needed &mdash; everything is configured by the account administrator.
+            </div>
+        </div>
+        @endif
+
+        {{-- Actions --}}
+        <div class="form-actions">
+            <a href="{{ route('register.account') }}" class="btn secondary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+                <span>Back</span>
+            </a>
+            <button type="submit" class="btn primary">
+                <span>Verify &amp; Continue</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+            </button>
+        </div>
+    </form>
 </div>
 @endsection

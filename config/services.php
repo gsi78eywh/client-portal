@@ -18,9 +18,6 @@ return [
         'key' => env('POSTMARK_API_KEY'),
     ],
 
-    'resend' => [
-        'key' => env('RESEND_API_KEY'),
-    ],
 
     'brevo' => [
         'key' => env('BREVO_API_KEY'),
@@ -38,5 +35,6 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+
 
 ];

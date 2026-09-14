@@ -38,6 +38,8 @@ class PortalController extends Controller
         $modules = $this->entitlementService->getAllModules($account);
         $usage = $this->entitlementService->getUsageMeters($account);
 
+        $lifecycle = $this->entitlementService->getLifecycleData($account);
+
         return view('portal.town-hall', [
             'user' => $user,
             'account' => $account,
@@ -47,12 +49,80 @@ class PortalController extends Controller
             'progress' => $progress,
             'modules' => $modules,
             'usage' => $usage,
+            'lifecycle' => $lifecycle,
         ]);
+    }
+
+    public function setPrototypeState(Request $request)
+    {
+        $state = $request->input('state', 'trial');
+        session(['client.subscription.status' => $state]);
+
+        if ($state === 'trial') {
+            session(['client.trial.ends_at' => now()->addDays(30)->toDateTimeString()]);
+        } elseif ($state === 'limited') {
+            session(['client.trial.ends_at' => now()->subDay()->toDateTimeString()]);
+            session(['client.verification_submitted' => false]);
+        } elseif ($state === 'paid') {
+            session(['client.verification_submitted' => true]);
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'state' => $state,
+                'message' => "State switched to {$state}.",
+            ]);
+        }
+
+        return back()->with('status', "Switched state to {$state}.");
+    }
+
+    public function simulateVerification(Request $request)
+    {
+        session(['client.verification_submitted' => true]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Verification approved in prototype.',
+            ]);
+        }
+
+        return back()->with('status', 'Verification submitted and approved in prototype.');
+    }
+
+    public function saveFreeModules(Request $request)
+    {
+        $modules = $request->input('modules', []);
+        if (count($modules) > 3) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'You can select a maximum of 3 modules.'], 422);
+            }
+            return back()->withErrors(['modules' => 'You can select a maximum of 3 modules.']);
+        }
+
+        session(['client.free_modules' => $modules]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'modules' => $modules,
+                'message' => 'Free modules saved.',
+            ]);
+        }
+
+        return back()->with('status', 'Free modules saved.');
     }
 
     public function test(): View
     {
-        return view('portal.test');
+        return view('portal.prototype');
+    }
+
+    public function prototype(): View
+    {
+        return view('portal.prototype');
     }
 
     public function accountCreated(): View

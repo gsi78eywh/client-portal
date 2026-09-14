@@ -1461,15 +1461,15 @@
    MODULE SUMMARY
 ========================================================= */
 
-.module-grid {
+.compliance-page .module-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 365px;
     gap: 16px;
     margin-bottom: 18px;
 }
 
-.module-card,
-.trend-card {
+.compliance-page .module-card,
+.compliance-page .trend-card {
     min-width: 0;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
@@ -1477,7 +1477,7 @@
     box-shadow: 0 2px 8px rgba(15, 23, 42, .025);
 }
 
-.module-card {
+.compliance-page .module-card {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -1993,6 +1993,18 @@
 }
 
 
+/* COMPLIANT */
+
+.status.compliant {
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.status.compliant > span {
+    background: #10b981;
+}
+
+
 /* =========================================================
    ACTION
 ========================================================= */
@@ -2033,7 +2045,7 @@
         padding-right: 6px;
     }
 
-    .module-grid {
+    .compliance-page .module-grid {
         grid-template-columns: minmax(0, 1fr) 330px;
     }
 
@@ -2057,7 +2069,7 @@
         justify-content: flex-start;
     }
 
-    .module-grid {
+    .compliance-page .module-grid {
         grid-template-columns: 1fr;
     }
 
@@ -2337,15 +2349,15 @@
    MODULE SUMMARY
 ========================================================= */
 
-.module-grid {
+.entity-page .module-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 365px;
     gap: 16px;
     margin-bottom: 18px;
 }
 
-.module-card,
-.trend-card {
+.entity-page .module-card,
+.entity-page .trend-card {
     min-width: 0;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
@@ -2353,7 +2365,7 @@
     box-shadow: 0 2px 8px rgba(15, 23, 42, .025);
 }
 
-.module-card {
+.entity-page .module-card {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -2953,7 +2965,7 @@
         padding-right: 6px;
     }
 
-    .module-grid {
+    .entity-page .module-grid {
         grid-template-columns: minmax(0, 1fr) 330px;
     }
 
@@ -2981,7 +2993,7 @@
         justify-content: flex-start;
     }
 
-    .module-grid {
+    .entity-page .module-grid {
         grid-template-columns: 1fr;
     }
 

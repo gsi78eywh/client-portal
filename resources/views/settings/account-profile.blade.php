@@ -7,7 +7,24 @@
 @section('content')
 
 @php
-    $accountProfile = $profile ?? session('account_profile', []);
+    $prof = $profile ?? (isset($account) && $account ? $account->profile : null);
+    $accountNum = $account?->account_number ?? session('client.account.number', 'ORDO-'.date('Y').'-00104829');
+    $acctLegalName = old('legal_name', $prof?->legal_name ?? $account?->name ?? session('client.account.name', ''));
+    $acctTradeName = old('trade_name', $prof?->trade_name ?? $acctLegalName);
+    $acctType = old('account_type', $prof?->account_type ?? $account?->account_type ?? session('client.account.type', 'Corporation'));
+    $acctTin = old('tin', $prof?->tin ?? '');
+    $acctRegNum = old('registration_number', $prof?->registration_number ?? '');
+    $acctRegAuth = old('registration_authority', $prof?->registration_authority ?? 'SEC');
+    $acctIndustry = old('industry', $prof?->industry_profession ?? '');
+    $acctEmail = old('email', $prof?->business_email ?? $account?->email ?? '');
+    $acctAddress = old('primary_address', $prof?->primary_address ?? '');
+
+    $pivotRel = (auth()->check() && isset($account) && $account) ? auth()->user()->accounts->firstWhere('id', $account->id)?->pivot?->relationship : null;
+    $acctRel = old('relationship', $pivotRel ?? session('client.account.relationship', 'Owner / Founder'));
+    $pivotAuth = (auth()->check() && isset($account) && $account) ? auth()->user()->accounts->firstWhere('id', $account->id)?->pivot?->is_administrator : null;
+    $acctAuth = old('is_authorized', $pivotAuth ? 'Yes' : (session('client.account.is_administrator') ? 'Yes' : 'Yes'));
+
+    $isProfileComplete = !empty($acctLegalName) && !empty($acctTin) && !empty($acctAddress);
 @endphp
 
 <div class="main-content-container" style="max-width: 900px; padding: 10px 0;">
@@ -26,14 +43,14 @@
         </h1>
 
         <p style="font-size: 13.5px; color: #64748b; margin: 0;">
-            Neutral business/professional profile. This can represent an individual, professional, practice, business or organization.
+            Neutral profile details. Represents your individual, professional, practice, business, or organization account.
         </p>
 
     </div>
 
 
     <!-- SUCCESS MESSAGE -->
-    @if(session('success'))
+    @if(session('success') || session('status'))
         <div style="
             display: flex;
             align-items: center;
@@ -63,7 +80,7 @@
                 />
             </svg>
 
-            <span>{{ session('success') }}</span>
+            <span>{{ session('success') ?? session('status') }}</span>
         </div>
     @endif
 
@@ -123,7 +140,7 @@
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                background: #ffffff;
+                background: #f8fafc;
                 color: #64748b;
                 font-size: 11px;
                 flex-shrink: 0;
@@ -159,7 +176,7 @@
                     color: #0f172a;
                     margin: 0 0 2px 0;
                 ">
-                    {{ old('trade_name', $accountProfile['trade_name'] ?? 'John Kelly & Company') }}
+                    {{ $acctTradeName ?: ($acctLegalName ?: 'ORDO Account Profile') }}
                 </h3>
 
                 <div style="
@@ -167,20 +184,34 @@
                     color: #64748b;
                     margin-bottom: 6px;
                 ">
-                    ORDO Account ID: ORDO-908550319
+                    ORDO Account ID: <strong>{{ $accountNum }}</strong>
                 </div>
 
-                <span style="
-                    display: inline-block;
-                    background: #fef3c7;
-                    color: #b45309;
-                    font-size: 11px;
-                    font-weight: 600;
-                    padding: 3px 10px;
-                    border-radius: 12px;
-                ">
-                    Profile incomplete
-                </span>
+                @if($isProfileComplete)
+                    <span style="
+                        display: inline-block;
+                        background: #dcfce7;
+                        color: #166534;
+                        font-size: 11px;
+                        font-weight: 600;
+                        padding: 3px 10px;
+                        border-radius: 12px;
+                    ">
+                        Profile complete
+                    </span>
+                @else
+                    <span style="
+                        display: inline-block;
+                        background: #fef3c7;
+                        color: #b45309;
+                        font-size: 11px;
+                        font-weight: 600;
+                        padding: 3px 10px;
+                        border-radius: 12px;
+                    ">
+                        Profile incomplete
+                    </span>
+                @endif
 
             </div>
 
@@ -233,16 +264,16 @@
                         "
                     >
 
-                        <option value="Corporation" {{ old('account_type', is_array($accountProfile) ? ($accountProfile['account_type'] ?? 'Corporation') : ($accountProfile->account_type ?? 'Corporation')) === 'Corporation' ? 'selected' : '' }}>Corporation</option>
-                        <option value="Individual" {{ old('account_type', is_array($accountProfile) ? ($accountProfile['account_type'] ?? '') : ($accountProfile->account_type ?? '')) === 'Individual' ? 'selected' : '' }}>Individual</option>
-                        <option value="Professional / Practitioner" {{ old('account_type', is_array($accountProfile) ? ($accountProfile['account_type'] ?? '') : ($accountProfile->account_type ?? '')) === 'Professional / Practitioner' ? 'selected' : '' }}>Professional / Practitioner</option>
-                        <option value="Sole Proprietorship" {{ old('account_type', is_array($accountProfile) ? ($accountProfile['account_type'] ?? '') : ($accountProfile->account_type ?? '')) === 'Sole Proprietorship' ? 'selected' : '' }}>Sole Proprietorship</option>
-                        <option value="Partnership" {{ old('account_type', is_array($accountProfile) ? ($accountProfile['account_type'] ?? '') : ($accountProfile->account_type ?? '')) === 'Partnership' ? 'selected' : '' }}>Partnership</option>
-                        <option value="OPC" {{ old('account_type', is_array($accountProfile) ? ($accountProfile['account_type'] ?? '') : ($accountProfile->account_type ?? '')) === 'OPC' ? 'selected' : '' }}>OPC (One Person Corporation)</option>
-                        <option value="Association / Nonprofit" {{ old('account_type', is_array($accountProfile) ? ($accountProfile['account_type'] ?? '') : ($accountProfile->account_type ?? '')) === 'Association / Nonprofit' ? 'selected' : '' }}>Association / Nonprofit</option>
-                        <option value="Cooperative" {{ old('account_type', is_array($accountProfile) ? ($accountProfile['account_type'] ?? '') : ($accountProfile->account_type ?? '')) === 'Cooperative' ? 'selected' : '' }}>Cooperative</option>
-                        <option value="Government / Public Entity" {{ old('account_type', is_array($accountProfile) ? ($accountProfile['account_type'] ?? '') : ($accountProfile->account_type ?? '')) === 'Government / Public Entity' ? 'selected' : '' }}>Government / Public Entity</option>
-                        <option value="Other" {{ old('account_type', is_array($accountProfile) ? ($accountProfile['account_type'] ?? '') : ($accountProfile->account_type ?? '')) === 'Other' ? 'selected' : '' }}>Other</option>
+                        <option value="Corporation" {{ $acctType === 'Corporation' ? 'selected' : '' }}>Corporation</option>
+                        <option value="Individual" {{ $acctType === 'Individual' ? 'selected' : '' }}>Individual</option>
+                        <option value="Professional / Practitioner" {{ $acctType === 'Professional / Practitioner' ? 'selected' : '' }}>Professional / Practitioner</option>
+                        <option value="Sole Proprietorship" {{ $acctType === 'Sole Proprietorship' ? 'selected' : '' }}>Sole Proprietorship</option>
+                        <option value="Partnership" {{ $acctType === 'Partnership' ? 'selected' : '' }}>Partnership</option>
+                        <option value="OPC" {{ $acctType === 'OPC' ? 'selected' : '' }}>OPC (One Person Corporation)</option>
+                        <option value="Association / Nonprofit" {{ $acctType === 'Association / Nonprofit' ? 'selected' : '' }}>Association / Nonprofit</option>
+                        <option value="Cooperative" {{ $acctType === 'Cooperative' ? 'selected' : '' }}>Cooperative</option>
+                        <option value="Government / Public Entity" {{ $acctType === 'Government / Public Entity' ? 'selected' : '' }}>Government / Public Entity</option>
+                        <option value="Other" {{ $acctType === 'Other' ? 'selected' : '' }}>Other</option>
                     </select>
 
                 </div>
@@ -264,7 +295,7 @@
                     <input
                         type="text"
                         name="legal_name"
-                        value="{{ old('legal_name', is_array($accountProfile) ? ($accountProfile['legal_name'] ?? $accountProfile['registered_name'] ?? 'John Kelly and Company (JK&C Inc.)') : ($accountProfile->legal_name ?? 'John Kelly and Company (JK&C Inc.)')) }}"
+                        value="{{ $acctLegalName }}"
                         placeholder="Enter legal or registered name"
                         style="
                             width: 100%;
@@ -276,6 +307,7 @@
                             color: #0f172a;
                             box-sizing: border-box;
                         "
+                        required
                     >
 
                 </div>
@@ -297,8 +329,8 @@
                     <input
                         type="text"
                         name="trade_name"
-                        value="{{ old('trade_name', $accountProfile['trade_name'] ?? 'John Kelly & Company') }}"
-                        placeholder="Enter trade name"
+                        value="{{ $acctTradeName }}"
+                        placeholder="Enter trade or operating name"
                         style="
                             width: 100%;
                             height: 42px;
@@ -330,7 +362,7 @@
                     <input
                         type="text"
                         name="tin"
-                        value="{{ old('tin', $accountProfile['tin'] ?? '000-000-000-000') }}"
+                        value="{{ $acctTin }}"
                         placeholder="000-000-000-000"
                         style="
                             width: 100%;
@@ -342,6 +374,7 @@
                             color: #0f172a;
                             box-sizing: border-box;
                         "
+                        required
                     >
 
                 </div>
@@ -363,7 +396,7 @@
                     <input
                         type="text"
                         name="registration_number"
-                        value="{{ old('registration_number', $accountProfile['registration_number'] ?? '2025120230900-02') }}"
+                        value="{{ $acctRegNum }}"
                         placeholder="Enter registration number"
                         style="
                             width: 100%;
@@ -410,30 +443,37 @@
 
                         <option
                             value="SEC"
-                            {{ old('registration_authority', $accountProfile['registration_authority'] ?? 'SEC') === 'SEC' ? 'selected' : '' }}
+                            {{ $acctRegAuth === 'SEC' ? 'selected' : '' }}
                         >
                             SEC
                         </option>
 
                         <option
                             value="DTI"
-                            {{ old('registration_authority', $accountProfile['registration_authority'] ?? '') === 'DTI' ? 'selected' : '' }}
+                            {{ $acctRegAuth === 'DTI' ? 'selected' : '' }}
                         >
                             DTI
                         </option>
 
                         <option
                             value="CDA"
-                            {{ old('registration_authority', $accountProfile['registration_authority'] ?? '') === 'CDA' ? 'selected' : '' }}
+                            {{ $acctRegAuth === 'CDA' ? 'selected' : '' }}
                         >
                             CDA
                         </option>
 
                         <option
                             value="BIR"
-                            {{ old('registration_authority', $accountProfile['registration_authority'] ?? '') === 'BIR' ? 'selected' : '' }}
+                            {{ $acctRegAuth === 'BIR' ? 'selected' : '' }}
                         >
                             BIR
+                        </option>
+
+                        <option
+                            value="Other"
+                            {{ $acctRegAuth === 'Other' ? 'selected' : '' }}
+                        >
+                            Other
                         </option>
 
                     </select>
@@ -457,7 +497,7 @@
                     <input
                         type="text"
                         name="industry"
-                        value="{{ old('industry', $accountProfile['industry'] ?? 'Corporate Advisory & Management Consulting') }}"
+                        value="{{ $acctIndustry }}"
                         placeholder="Enter industry or profession"
                         style="
                             width: 100%;
@@ -490,7 +530,7 @@
                     <input
                         type="email"
                         name="email"
-                        value="{{ old('email', $accountProfile['email'] ?? 'info@jknc.io') }}"
+                        value="{{ $acctEmail }}"
                         placeholder="Enter business email"
                         style="
                             width: 100%;
@@ -523,7 +563,7 @@
                     <input
                         type="text"
                         name="primary_address"
-                        value="{{ old('primary_address', $accountProfile['primary_address'] ?? 'Unit 305, 3F Cebu Holdings Center, Cebu Business Park, Cebu City') }}"
+                        value="{{ $acctAddress }}"
                         placeholder="Enter primary address"
                         style="
                             width: 100%;
@@ -535,6 +575,7 @@
                             color: #0f172a;
                             box-sizing: border-box;
                         "
+                        required
                     >
 
                 </div>
@@ -569,26 +610,19 @@
                     >
 
                         @php
-                            $selectedRel = old('relationship', is_array($accountProfile) ? ($accountProfile['relationship'] ?? 'President / CEO') : 'President / CEO');
                             $relOptions = [
-                                'Self / Account Owner',
-                                'Owner / Proprietor',
-                                'Professional / Practitioner',
-                                'Partner',
-                                'Stockholder / Shareholder',
-                                'Director / Trustee',
+                                'Owner / Founder',
+                                'Lead Practitioner',
+                                'Director / Officer',
                                 'President / CEO',
-                                'Corporate Officer',
-                                'Corporate Secretary',
-                                'Authorized Representative',
-                                'Accountant / Bookkeeper',
+                                'Partner',
                                 'Employee / Staff',
-                                'Consultant / Adviser',
+                                'Authorized Representative',
                                 'Other',
                             ];
                         @endphp
                         @foreach ($relOptions as $opt)
-                            <option value="{{ $opt }}" {{ $selectedRel === $opt ? 'selected' : '' }}>
+                            <option value="{{ $opt }}" {{ $acctRel === $opt ? 'selected' : '' }}>
                                 {{ $opt }}
                             </option>
                         @endforeach
@@ -627,14 +661,14 @@
 
                         <option
                             value="Yes"
-                            {{ old('is_authorized', $accountProfile['is_authorized'] ?? 'Yes') === 'Yes' ? 'selected' : '' }}
+                            {{ ($acctAuth === 'Yes' || $acctAuth === 1 || $acctAuth === true || $acctAuth === '1') ? 'selected' : '' }}
                         >
                             Yes
                         </option>
 
                         <option
                             value="No"
-                            {{ old('is_authorized', $accountProfile['is_authorized'] ?? '') === 'No' ? 'selected' : '' }}
+                            {{ ($acctAuth === 'No' || $acctAuth === 0 || $acctAuth === false || $acctAuth === '0') ? 'selected' : '' }}
                         >
                             No
                         </option>

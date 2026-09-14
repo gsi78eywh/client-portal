@@ -15,14 +15,15 @@ class ContactStepRequest extends FormRequest
     {
         return [
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'mobile_number' => ['required', 'string', 'max:30'],
+            'mobile_number' => ['required', 'string', 'min:10', 'max:30'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'email.unique' => 'An ORDO account already exists using this email address.',
+            'email.unique' => 'This email address is already associated with an ORDO account. Please sign in or use another email address.',
+            'mobile_number.min' => 'Please enter a valid mobile number with at least 10 digits.',
         ];
     }
 }

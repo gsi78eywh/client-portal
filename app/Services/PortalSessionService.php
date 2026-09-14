@@ -52,9 +52,9 @@ class PortalSessionService
                 ],
                 'client.trial.active' => true,
                 'client.trial.started_at' => now()->toDateString(),
-                'client.trial.ends_at' => now()->addDays(30)->toDateString(),
-                'client.subscription.status' => 'trial',
-                'client.subscription.plan' => '30-Day Free Access',
+                'client.trial.ends_at' => session('client.trial.ends_at', now()->addDays(30)->toDateString()),
+                'client.subscription.status' => session('client.subscription.status', 'trial'),
+                'client.subscription.plan' => session('client.subscription.plan', '30-Day Free Access'),
                 'client.modules' => [
                     'entity-governance' => ['status' => 'trial'],
                     'compliance' => ['status' => 'trial'],

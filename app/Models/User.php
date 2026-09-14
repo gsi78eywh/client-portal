@@ -28,6 +28,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'email_verified_at',
+        'mobile_verified_at',
     ];
 
 
@@ -65,6 +67,7 @@ class User extends Authenticatable
              * Email verification timestamp
              */
             'email_verified_at' => 'datetime',
+            'mobile_verified_at' => 'datetime',
 
             /*
              * Automatically hash passwords when assigned.

@@ -21,8 +21,20 @@ class BusinessInformationRequest extends FormRequest
             ],
             'registered_name' => ['required', 'string', 'max:255'],
             'trade_name' => ['nullable', 'string', 'max:255'],
-            'industry' => ['required', 'string', 'max:255'],
-            'country' => ['required', 'string', 'max:100'],
+            'tin' => ['nullable', 'string', 'max:50'],
+            'registration_number' => ['nullable', 'string', 'max:100'],
+            'registration_authority' => ['nullable', 'string', 'max:150'],
+            'registration_date' => ['nullable', 'date'],
+            'industry' => ['nullable', 'string', 'max:255'],
+            'primary_address' => ['nullable', 'string', 'max:500'],
+            'company_email' => ['nullable', 'email', 'max:255'],
+            'company_phone' => ['nullable', 'string', 'max:50'],
+            'business_email' => ['nullable', 'email', 'max:255'],
+            'contact_number' => ['nullable', 'string', 'max:50'],
+            'website' => ['nullable', 'string', 'max:255'],
+            'country' => ['nullable', 'string', 'max:100'],
+            'relationship' => ['required', 'string', 'max:100'],
+            'is_authorized' => ['required', 'string', 'in:Yes,No'],
         ];
     }
 }

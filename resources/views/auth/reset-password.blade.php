@@ -2,88 +2,116 @@
 
 @section('title', 'Reset Password | ORDO')
 
-@section('hero-tag', 'Security')
+@section('hero-tag', 'SECURITY')
 @section('hero-title', 'Create a new password for your account.')
 @section('hero-description', 'Choose a strong, unique password to secure your ORDO commercial workspace.')
 
 @section('content')
-    <div class="icon-circle" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-        </svg>
-    </div>
+    <div class="kicker">NEW PASSWORD</div>
+    <h2>Set new password</h2>
+    <p>Please enter and confirm your new password below to secure your account.</p>
 
-    <span class="form-tag">New Password</span>
-    <h2 class="form-title">Set new password</h2>
-    <p class="form-subtitle">Please enter and confirm your new password below.</p>
+    @php
+        $targetEmail = $email ?? request('email', session('password_reset.email'));
+    @endphp
 
-    <form method="POST" action="{{ route('password.update') }}">
+    @if ($errors->any())
+        <div class="alert alert-error" role="alert">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <ul style="margin:0;padding-left:18px;">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <form method="POST" action="{{ route('password.update') }}" novalidate>
         @csrf
-
-        @php
-            $targetEmail = $email ?? request('email', session('password_reset.email'));
-        @endphp
 
         @if ($targetEmail)
             <input type="hidden" name="email" value="{{ $targetEmail }}">
         @endif
 
-        {{-- NEW PASSWORD --}}
-        <div class="form-group">
-            <label for="password" class="form-label">
-                New Password <span class="req">*</span>
-            </label>
-            <input
-                type="password"
-                id="password"
-                name="password"
-                class="form-input {{ $errors->has('password') ? 'is-error' : '' }}"
-                placeholder="Enter your new password"
-                minlength="8"
-                required
-                autocomplete="new-password"
-                autofocus
-            >
-            <div class="password-requirements">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="16" x2="12" y2="12"></line>
-                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                </svg>
-                <span>Use at least 8 characters for your new password.</span>
+        <div class="auth-stack">
+            {{-- NEW PASSWORD --}}
+            <div>
+                <label for="password" class="label">New password <span style="color:var(--red)">*</span></label>
+                <div class="password-wrap">
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        class="input @error('password') has-error @enderror"
+                        placeholder="Enter your new password"
+                        minlength="8"
+                        required
+                        autocomplete="new-password"
+                        autofocus
+                    >
+                    <button type="button" class="eye" onclick="togglePassword('password')" aria-label="Toggle password visibility">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="small muted" style="margin-top: 5px; display: flex; align-items: center; gap: 5px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    <span>Use at least 8 characters.</span>
+                </div>
+                @error('password')
+                    <span class="field-error">{{ $message }}</span>
+                @enderror
             </div>
-            @error('password')
-                <div class="form-error" role="alert">{{ $message }}</div>
-            @enderror
-        </div>
 
-        {{-- CONFIRM PASSWORD --}}
-        <div class="form-group">
-            <label for="password_confirmation" class="form-label">
-                Confirm New Password <span class="req">*</span>
-            </label>
-            <input
-                type="password"
-                id="password_confirmation"
-                name="password_confirmation"
-                class="form-input"
-                placeholder="Confirm your new password"
-                minlength="8"
-                required
-                autocomplete="new-password"
-            >
-        </div>
+            {{-- CONFIRM PASSWORD --}}
+            <div>
+                <label for="password_confirmation" class="label">Confirm new password <span style="color:var(--red)">*</span></label>
+                <div class="password-wrap">
+                    <input
+                        type="password"
+                        id="password_confirmation"
+                        name="password_confirmation"
+                        class="input"
+                        placeholder="Confirm your new password"
+                        minlength="8"
+                        required
+                        autocomplete="new-password"
+                    >
+                    <button type="button" class="eye" onclick="togglePassword('password_confirmation')" aria-label="Toggle password visibility">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
 
-        <button type="submit" class="btn-submit">Reset Password</button>
+            {{-- SUBMIT --}}
+            <button type="submit" class="btn primary" style="width: 100%;">
+                Reset Password &amp; Sign In &rarr;
+            </button>
+        </div>
     </form>
 
-    <a href="{{ route('login') }}" class="back-link">
-        <span class="back-link-arrow" aria-hidden="true">&larr;</span>
-        <span>Back to Sign In</span>
+    <div class="auth-sep">Or return to login</div>
+
+    <a href="{{ route('login') }}" class="btn ghost" style="width: 100%; display: flex;">
+        &larr; Back to Sign in
     </a>
 
-    <p class="terms-text">
-        By continuing, you agree to ORDO <a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a>.
-    </p>
+    <div class="auth-footer">
+        By continuing, you agree to ORDO Terms of Use and Privacy Policy.
+    </div>
+@endsection
+
+@section('scripts')
+<script>
+function togglePassword(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.type = el.type === 'password' ? 'text' : 'password';
+}
+</script>
 @endsection

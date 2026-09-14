@@ -93,11 +93,75 @@ class RegistrationService
     }
 
     /**
-     * Check if Contact verification has been completed.
+     * Check if Email verification has been completed.
+     */
+    public function isEmailVerified(): bool
+    {
+        return session('registration.email_verified', false) === true;
+    }
+
+    /**
+     * Check if Mobile verification has been completed.
+     */
+    public function isMobileVerified(): bool
+    {
+        return session('registration.mobile_verified', false) === true;
+    }
+
+    /**
+     * Check if Contact verification has been completed (email verification required).
      */
     public function isContactVerified(): bool
     {
-        return session('registration.contact_verified', false) === true;
+        return $this->isEmailVerified() || session('registration.contact_verified', false) === true;
+    }
+
+    /**
+     * Mark email as verified in registration session.
+     */
+    public function markEmailVerified(?string $timestamp = null): void
+    {
+        $this->putData('email_verified', true);
+        $this->putData('email_verified_at', $timestamp ?? now()->toIso8601String());
+        $this->putData('contact_verified', true);
+    }
+
+    /**
+     * Mark mobile as verified in registration session.
+     */
+    public function markMobileVerified(?string $timestamp = null): void
+    {
+        $this->putData('mobile_verified', true);
+        $this->putData('mobile_verified_at', $timestamp ?? now()->toIso8601String());
+        if ($this->isContactVerified()) {
+            $this->putData('contact_verified', true);
+        }
+    }
+
+    /**
+     * Generate a verification code (for testing / backward compatibility).
+     */
+    public function generateVerificationCode(): string
+    {
+        $code = '123456';
+        $this->putData('verification_code', $code);
+        return $code;
+    }
+
+    /**
+     * Verify a submitted code (for testing / backward compatibility).
+     */
+    public function verifyCode(string $code): bool
+    {
+        $validCode = $this->getData('verification_code');
+        if ($validCode && $validCode === $code) {
+            $this->putData('contact_verified', true);
+            $this->putData('email_verified', true);
+            $this->putData('mobile_verified', true);
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -106,36 +170,6 @@ class RegistrationService
     public function hasSecurity(): bool
     {
         return $this->isContactVerified() && session('registration.completed', false) === true;
-    }
-
-    /**
-     * Generate or fetch verification code.
-     */
-    public function generateVerificationCode(): string
-    {
-        // For development / testing, keep standard 123456 code support
-        $code = '123456';
-        $this->putData('contact_verification_sent', true);
-        $this->putData('contact_verification_code', $code);
-        $this->putData('contact_verified', false);
-
-        return $code;
-    }
-
-    /**
-     * Verify submitted contact verification code.
-     */
-    public function verifyCode(string $code): bool
-    {
-        $validCode = $this->getData('contact_verification_code', '123456');
-
-        if ((string) $code === (string) $validCode) {
-            $this->putData('contact_verified', true);
-            session()->forget('registration.contact_verification_code');
-            return true;
-        }
-
-        return false;
     }
 
     /**
@@ -154,7 +188,7 @@ class RegistrationService
             throw new InvalidArgumentException('Missing required email or password for registration.');
         }
 
-        // Generate unique ORDO account number
+        // Generate unique ORDO account number if needed
         do {
             $accountNumber = 'ORDO-' . now()->format('Y') . '-' . strtoupper(Str::random(8));
         } while (Account::where('account_number', $accountNumber)->exists());
@@ -164,6 +198,8 @@ class RegistrationService
                 'name' => trim(($profile['first_name'] ?? '') . ' ' . ($profile['last_name'] ?? '')),
                 'email' => $contact['email'],
                 'password' => $security['password'],
+                'email_verified_at' => session('registration.email_verified_at') ? now()->parse(session('registration.email_verified_at')) : now(),
+                'mobile_verified_at' => session('registration.mobile_verified_at') ? now()->parse(session('registration.mobile_verified_at')) : now(),
             ]);
 
             $userProfile = UserProfile::create([
@@ -175,51 +211,135 @@ class RegistrationService
                 'date_of_birth' => $profile['date_of_birth'] ?? null,
                 'gender' => $profile['gender'] ?? null,
                 'country_region' => $profile['country'] ?? null,
-                'mobile_number' => $contact['mobile_number'] ?? null,
+                'mobile_number' => !empty($contact['mobile_number']) ? \App\Services\Contact\PhoneNumberService::normalize($contact['mobile_number']) : null,
                 'profile_photo_path' => null,
             ]);
 
-            $account = Account::create([
-                'account_number' => $accountNumber,
-                'status' => 'active',
-            ]);
+            if ($accountType === 'invited') {
+                // Invited flow: connect to existing ABC Corporation account without creating a duplicate
+                $account = Account::whereHas('profile', function ($q) {
+                    $q->where('legal_name', 'ABC Corporation');
+                })->first();
 
-            $legalName = match ($accountType) {
-                'personal' => $information['account_name'] ?? 'Personal Account',
-                'profession' => $information['practice_name'] ?? 'Professional Practice',
-                'business' => $information['registered_name'] ?? 'Business Account',
-                default => 'ORDO Account',
-            };
+                if (!$account) {
+                    $account = Account::create([
+                        'account_number' => 'ORDO-2026-00192837',
+                        'status' => 'active',
+                        'account_type' => 'business',
+                        'verification_status' => 'verified',
+                    ]);
 
-            $formattedAccountType = match ($accountType) {
-                'personal' => 'Personal',
-                'profession' => 'Professional / Practice',
-                'business' => $information['business_account_type'] ?? 'Business / Organization',
-                default => 'Individual',
-            };
+                    AccountProfile::create([
+                        'account_id' => $account->id,
+                        'account_type' => 'Corporation',
+                        'legal_name' => 'ABC Corporation',
+                        'trade_name' => 'ABC Corp',
+                        'tin' => '009-445-678-000',
+                        'registration_number' => 'CS202409812',
+                        'registration_authority' => 'Securities and Exchange Commission',
+                        'registration_date' => '2024-03-10',
+                        'industry_profession' => 'Commercial Trading & Logistics',
+                        'primary_address' => 'Suite 801 Prestige Tower, F. Ortigas Jr. Road, Ortigas Center, Pasig City',
+                        'business_email' => 'admin@abccorp.ph',
+                        'contact_number' => '+63 2 8631 0000',
+                        'website' => 'https://abccorp.ph',
+                    ]);
+                }
 
-            $accountProfile = AccountProfile::create([
-                'account_id' => $account->id,
-                'account_type' => $formattedAccountType,
-                'legal_name' => $legalName,
-                'trade_name' => $information['trade_name'] ?? null,
-                'tin' => null,
-                'registration_number' => null,
-                'registration_authority' => null,
-                'registration_date' => null,
-                'industry_profession' => $information['industry'] ?? $information['profession'] ?? null,
-                'primary_address' => null,
-                'business_email' => $contact['email'] ?? null,
-                'contact_number' => $contact['mobile_number'] ?? null,
-                'website' => null,
-                'logo_path' => null,
-            ]);
+                $accountProfile = $account->profile ?? AccountProfile::where('account_id', $account->id)->first();
+                $relationship = $information['existing_account']['role']
+                    ?? $information['invitation_role']
+                    ?? $information['role']
+                    ?? $information['relationship']
+                    ?? 'Employee / Staff';
+
+                // Server-side authorization & invitation-based role assignment:
+                // Do NOT allow the invited user to choose or escalate administrator status from the registration form.
+                // "Employee / Staff" should result in is_administrator = 0 unless the invitation explicitly grants administrator privileges.
+                $isAdministrator = false;
+                if (isset($information['existing_account']['is_administrator'])) {
+                    $isAdministrator = (bool) $information['existing_account']['is_administrator'];
+                } elseif (isset($information['invitation']['is_administrator'])) {
+                    $isAdministrator = (bool) $information['invitation']['is_administrator'];
+                } elseif (isset($information['is_administrator'])) {
+                    $isAdministrator = (bool) $information['is_administrator'];
+                } elseif (in_array(strtolower($relationship), ['administrator', 'account administrator', 'owner', 'co-owner'], true)) {
+                    $isAdministrator = true;
+                }
+            } else {
+                $account = Account::create([
+                    'account_number' => $accountNumber,
+                    'status' => 'active',
+                    'account_type' => $accountType,
+                    'verification_status' => 'not_started',
+                ]);
+
+                $personalFullName = trim(implode(' ', array_filter([
+                    $profile['first_name'] ?? '',
+                    $profile['middle_name'] ?? '',
+                    $profile['last_name'] ?? '',
+                    $profile['suffix'] ?? '',
+                ], fn($v) => !is_null($v) && trim((string)$v) !== '')));
+
+                $legalName = match ($accountType) {
+                    'personal' => $personalFullName ?: ($information['account_name'] ?? 'Personal Account'),
+                    'profession' => $information['practice_name'] ?? ($information['account_name'] ?? 'Professional Practice'),
+                    'business' => $information['registered_name'] ?? ($information['account_name'] ?? 'Business Account'),
+                    default => 'ORDO Account',
+                };
+
+                $formattedAccountType = match ($accountType) {
+                    'personal' => 'Individual',
+                    'profession' => 'Professional / Practitioner',
+                    'business' => $information['business_account_type'] ?? 'Corporation',
+                    default => 'Individual',
+                };
+
+                $relationship = match ($accountType) {
+                    'personal' => 'Self / Account Owner',
+                    'profession' => (($information['relationship'] ?? '') === 'Other' && !empty($information['relationship_other']))
+                        ? $information['relationship_other']
+                        : ($information['relationship'] ?? 'Professional / Practitioner'),
+                    'business' => (($information['relationship'] ?? '') === 'Other' && !empty($information['relationship_other']))
+                        ? $information['relationship_other']
+                        : ($information['relationship'] ?? 'Self / Account Owner'),
+                    default => 'Self / Account Owner',
+                };
+
+                $isAdministrator = match ($accountType) {
+                    'personal' => true,
+                    'profession' => ($information['is_authorized'] ?? 'Yes') === 'Yes',
+                    'business' => ($information['is_authorized'] ?? 'Yes') === 'Yes',
+                    default => true,
+                };
+
+                $resolvedProfession = ($information['profession'] ?? '') === 'Other'
+                    ? (!empty($information['profession_other']) ? $information['profession_other'] : 'Other')
+                    : ($information['profession'] ?? null);
+
+                $accountProfile = AccountProfile::create([
+                    'account_id' => $account->id,
+                    'account_type' => $formattedAccountType,
+                    'legal_name' => $legalName,
+                    'trade_name' => $information['trade_name'] ?? null,
+                    'tin' => $information['tin'] ?? null,
+                    'registration_number' => $information['registration_number'] ?? null,
+                    'registration_authority' => $information['registration_authority'] ?? null,
+                    'registration_date' => $information['registration_date'] ?? null,
+                    'industry_profession' => $information['industry'] ?? $resolvedProfession,
+                    'primary_address' => $information['primary_address'] ?? ($profile['country'] ?? null),
+                    'business_email' => $information['business_email'] ?? ($contact['email'] ?? null),
+                    'contact_number' => $information['contact_number'] ?? ($contact['mobile_number'] ?? null),
+                    'website' => $information['website'] ?? null,
+                    'logo_path' => null,
+                ]);
+            }
 
             DB::table('account_user')->insert([
                 'account_id' => $account->id,
                 'user_id' => $user->id,
-                'relationship' => 'Self / Account Owner',
-                'is_administrator' => true,
+                'relationship' => $relationship,
+                'is_administrator' => $isAdministrator,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -229,6 +349,8 @@ class RegistrationService
                 'account' => $account,
                 'user_profile' => $userProfile,
                 'account_profile' => $accountProfile,
+                'relationship' => $relationship,
+                'is_administrator' => $isAdministrator,
             ];
         });
 
@@ -239,8 +361,17 @@ class RegistrationService
 
         $this->sessionService->initSession($created['user'], $created['account']);
 
-        // Keep registration data snapshot in client.registration for reference
+        // Explicitly set 30-day trial status and verification status in session
         session([
+            'client.trial.active' => true,
+            'client.trial.started_at' => now()->toDateString(),
+            'client.trial.ends_at' => now()->addDays(30)->toDateString(),
+            'client.subscription.status' => 'trial',
+            'client.subscription.plan' => '30-Day Free Access',
+            'client.verification.status' => 'not_started',
+            'client.verification_submitted' => false,
+            'client.account.relationship' => $created['relationship'],
+            'client.account.is_administrator' => $created['is_administrator'],
             'client.registration' => [
                 'profile' => $profile,
                 'account' => $registrationData['account'] ?? [],

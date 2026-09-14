@@ -36,9 +36,11 @@
 
     {{-- CURRENT ACCOUNT --}}
     @php
-        $currentAccount = $accounts->firstWhere('id', $currentAccountId) ?? $accounts->first();
-        $currentProfile = $currentAccount?->profile;
-        $currentName = $currentProfile?->legal_name ?? $currentProfile?->trade_name ?? session('client.account.name', 'ORDO Client Account');
+        $currentAccountId = $currentAccountId ?? session('client.account.id', null);
+        $accountsCollection = collect($accounts ?? []);
+        $currentAccount = $accountsCollection->firstWhere('id', $currentAccountId) ?? $accountsCollection->first();
+        $currentProfile = is_array($currentAccount) ? ($currentAccount['profile'] ?? null) : $currentAccount?->profile;
+        $currentName = is_array($currentProfile) ? ($currentProfile['legal_name'] ?? $currentProfile['trade_name'] ?? session('client.account.name', 'ORDO Client Account')) : ($currentProfile?->legal_name ?? $currentProfile?->trade_name ?? session('client.account.name', 'ORDO Client Account'));
     @endphp
 
     <div class="card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">

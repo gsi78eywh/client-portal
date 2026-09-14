@@ -15,6 +15,16 @@ class SecurityStepRequest extends FormRequest
     {
         return [
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'terms' => ['accepted'],
+            'privacy_policy' => ['accepted'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'terms.accepted' => 'You must accept the Terms of Use to create an account.',
+            'privacy_policy.accepted' => 'You must accept the Privacy Policy to create an account.',
         ];
     }
 }

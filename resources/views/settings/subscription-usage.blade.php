@@ -22,6 +22,51 @@
         </p>
     </div>
 
+    @php
+        $entitlement = app(\App\Services\EntitlementService::class);
+        $userAccount = auth()->user()?->currentAccount();
+        $protoState = session('client.subscription.status', 'trial');
+        $freeModules = session('client.free_modules', ['entity-governance', 'compliance', 'records']);
+        $modulesList = $entitlement->getAllModules($userAccount);
+
+        $planTitle = match($protoState) {
+            'free' => 'ORDO Free Plan',
+            'limited' => 'ORDO Limited Access',
+            'paid' => 'ORDO Business (Commercial)',
+            default => 'ORDO 30-Day Full Access',
+        };
+        $planSubtitle = match($protoState) {
+            'free' => 'Your workspace retains access to your 3 selected Business modules. Unselected modules are in safe custody retention.',
+            'limited' => 'Access is currently limited. Complete verification in Settings to unlock your full access benefits.',
+            'paid' => 'All six Business modules and advanced governance features are fully enabled for your verified account.',
+            default => 'Your client account currently has full access to the available ORDO modules during your 30-day trial.',
+        };
+        $planBadge = match($protoState) {
+            'free' => 'Free Plan',
+            'limited' => 'Action Required',
+            'paid' => 'Active Commercial',
+            default => 'Trial Active',
+        };
+        $planBadgeStyle = match($protoState) {
+            'limited' => 'background-color:#fee2e2; color:#dc2626;',
+            'free' => 'background-color:#eff6ff; color:#2563eb;',
+            default => 'background-color:#dcfce7; color:#16a34a;',
+        };
+        $statusValue = match($protoState) {
+            'limited' => 'Action Required',
+            default => 'Active',
+        };
+        $accessValue = match($protoState) {
+            'free' => '3 Modules (Free)',
+            'limited' => 'Limited Custody',
+            default => 'Full Access',
+        };
+        $billingValue = match($protoState) {
+            'paid' => 'Annual Invoice',
+            default => 'Not Required',
+        };
+    @endphp
+
     {{-- CURRENT PLAN --}}
     <div class="card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         <div style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px;">
@@ -31,16 +76,16 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; margin-top: 4px;">
             <div>
                 <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 2px 0;">
-                    ORDO 30-Day Full Access
+                    {{ $planTitle }}
                 </h2>
 
                 <p style="font-size: 13px; color: #64748b; margin: 0;">
-                    Your client account currently has full access to the available ORDO modules.
+                    {{ $planSubtitle }}
                 </p>
             </div>
 
-            <span style="display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; background: #dc262615; color: #16a34a; font-size: 12px; font-weight: 600; background-color: #dcfce7;">
-                Active
+            <span style="display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; {{ $planBadgeStyle }}">
+                {{ $planBadge }}
             </span>
         </div>
 
@@ -51,7 +96,7 @@
                 </div>
 
                 <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-top: 6px;">
-                    Active
+                    {{ $statusValue }}
                 </div>
             </div>
 
@@ -61,7 +106,7 @@
                 </div>
 
                 <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-top: 6px;">
-                    Full Access
+                    {{ $accessValue }}
                 </div>
             </div>
 
@@ -71,87 +116,61 @@
                 </div>
 
                 <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-top: 6px;">
-                    Not Required
+                    {{ $billingValue }}
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- MODULE ACCESS --}}
+    {{-- MODULE ACCESS & FREE TIER SELECTION --}}
     <div class="card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-        <div style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px;">
-            MODULE ACCESS
-        </div>
-
-        <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 2px 0;">
-            Available Modules
-        </h2>
-
-        <p style="font-size: 13px; color: #64748b; margin: 0;">
-            Your current plan determines which ORDO modules are available to your account.
-        </p>
-
-        <div style="margin-top: 20px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 10px; background: #ffffff;">
-                <span style="font-size: 13.5px; font-weight: 600; color: #0f172a;">
-                    Entity &amp; Governance
-                </span>
-
-                <span style="color: #16a34a; font-size: 12px; font-weight: 600;">
-                    Enabled
-                </span>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+            <div>
+                <div style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px;">
+                    MODULE ENTITLEMENTS
+                </div>
+                <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 2px 0;">
+                    Free Plan Module Selection
+                </h2>
+                <p style="font-size: 13px; color: #64748b; margin: 0;">
+                    Choose up to 3 business modules to retain on your Free Plan. Checked modules remain active; unchecked modules enter safe custody retention.
+                </p>
             </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 10px; background: #ffffff;">
-                <span style="font-size: 13.5px; font-weight: 600; color: #0f172a;">
-                    Compliance
-                </span>
-
-                <span style="color: #16a34a; font-size: 12px; font-weight: 600;">
-                    Enabled
-                </span>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 10px; background: #ffffff;">
-                <span style="font-size: 13.5px; font-weight: 600; color: #0f172a;">
-                    Finance
-                </span>
-
-                <span style="color: #16a34a; font-size: 12px; font-weight: 600;">
-                    Enabled
-                </span>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 10px; background: #ffffff;">
-                <span style="font-size: 13.5px; font-weight: 600; color: #0f172a;">
-                    Human Capital
-                </span>
-
-                <span style="color: #16a34a; font-size: 12px; font-weight: 600;">
-                    Enabled
-                </span>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 10px; background: #ffffff;">
-                <span style="font-size: 13.5px; font-weight: 600; color: #0f172a;">
-                    Records
-                </span>
-
-                <span style="color: #16a34a; font-size: 12px; font-weight: 600;">
-                    Enabled
-                </span>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 10px; background: #ffffff;">
-                <span style="font-size: 13.5px; font-weight: 600; color: #0f172a;">
-                    Transmittals
-                </span>
-
-                <span style="color: #16a34a; font-size: 12px; font-weight: 600;">
-                    Enabled
-                </span>
+            <div id="freeSelectedCountBadge" style="padding: 4px 12px; border-radius: 999px; background: #eff6ff; color: #2563eb; font-size: 12px; font-weight: 700; border: 1px solid #bfdbfe;">
+                <span id="selectedCountText">{{ count($freeModules) }}</span> of 3 Selected
             </div>
         </div>
+
+        <form id="freeModuleForm" action="{{ route('portal.select-free-modules') }}" method="POST" style="margin-top: 20px;">
+            @csrf
+            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+                @foreach($modulesList as $modKey => $modMeta)
+                    @php
+                        $isSelected = in_array($modKey, $freeModules, true);
+                    @endphp
+                    <label style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border: 1px solid {{ $isSelected ? '#3b82f6' : '#e2e8f0' }}; border-radius: 10px; background: {{ $isSelected ? '#f8faff' : '#ffffff' }}; cursor: pointer; transition: all 0.2s;" id="moduleCard_{{ $modKey }}">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <input type="checkbox" name="modules[]" value="{{ $modKey }}" {{ $isSelected ? 'checked' : '' }} onchange="handleModuleSelect(this)" style="width: 16px; height: 16px; accent-color: #2563eb; cursor: pointer;">
+                            <div>
+                                <span style="font-size: 13.5px; font-weight: 600; color: #0f172a; display: block;">
+                                    {{ $modMeta['name'] }}
+                                </span>
+                                <span style="font-size: 11px; color: #64748b;">
+                                    {{ $modMeta['kpi'] }} &bull; {{ $modMeta['kpi_sub'] }}
+                                </span>
+                            </div>
+                        </div>
+                        <span id="statusTag_{{ $modKey }}" style="color: {{ $isSelected ? '#16a34a' : '#64748b' }}; font-size: 12px; font-weight: 600;">
+                            {{ $isSelected ? 'Retained' : 'Locked on Free' }}
+                        </span>
+                    </label>
+                @endforeach
+            </div>
+
+            <div style="margin-top: 18px; display: flex; justify-content: flex-end; gap: 10px; align-items: center;">
+                <button type="submit" class="btn primary sm" id="saveFreeModulesBtn" style="padding: 7px 18px; font-size: 12.5px;">Save Free Modules</button>
+            </div>
+        </form>
     </div>
 
     {{-- USAGE --}}
@@ -247,4 +266,63 @@
 
 </div>
 
+@push('scripts')
+<script>
+    function handleModuleSelect(checkbox) {
+        const checked = document.querySelectorAll('input[name="modules[]"]:checked');
+        if (checked.length > 3) {
+            checkbox.checked = false;
+            toast('You can select a maximum of 3 modules for the Free Plan.');
+            return;
+        }
+
+        const countEl = document.getElementById('selectedCountText');
+        if (countEl) countEl.textContent = checked.length;
+
+        document.querySelectorAll('input[name="modules[]"]').forEach(cb => {
+            const card = document.getElementById('moduleCard_' + cb.value);
+            const tag = document.getElementById('statusTag_' + cb.value);
+            if (!card || !tag) return;
+            if (cb.checked) {
+                card.style.borderColor = '#3b82f6';
+                card.style.background = '#f8faff';
+                tag.style.color = '#16a34a';
+                tag.textContent = 'Retained';
+            } else {
+                card.style.borderColor = '#e2e8f0';
+                card.style.background = '#ffffff';
+                tag.style.color = '#64748b';
+                tag.textContent = 'Locked on Free';
+            }
+        });
+    }
+
+    document.getElementById('freeModuleForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const checked = Array.from(document.querySelectorAll('input[name="modules[]"]:checked')).map(cb => cb.value);
+
+        fetch('{{ route('portal.select-free-modules') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ modules: checked })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                toast('Free Plan modules updated successfully!');
+                setTimeout(() => window.location.reload(), 350);
+            } else if (data.error) {
+                toast(data.error);
+            }
+        })
+        .catch(err => {
+            this.submit();
+        });
+    });
+</script>
+@endpush
 @endsection

@@ -18,6 +18,37 @@ class AuthenticationTest extends TestCase
         $response = $this->get(route('login'));
         $response->assertStatus(200);
         $response->assertViewIs('auth.login');
+        $response->assertSee('Sign in to ORDO');
+        $response->assertSee('name@company.com');
+        $response->assertDontSee('Demo Credentials');
+    }
+
+    public function test_root_redirects_to_login(): void
+    {
+        $response = $this->get('/');
+        $response->assertRedirect(route('login'));
+    }
+
+    public function test_can_login_with_mockup_credentials(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'john.abalde@jknc.io',
+            'password' => bcrypt('password123'),
+        ]);
+
+        $account = Account::factory()->create();
+        $user->accounts()->attach($account->id, [
+            'relationship' => 'Owner',
+            'is_administrator' => true,
+        ]);
+
+        $response = $this->post(route('login.submit'), [
+            'email' => 'john.abalde@jknc.io',
+            'password' => 'password123',
+        ]);
+
+        $response->assertRedirect(route('town-hall'));
+        $this->assertAuthenticatedAs($user);
     }
 
     public function test_user_can_login_with_correct_credentials(): void

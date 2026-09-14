@@ -81,16 +81,58 @@ class SettingsController extends Controller
         return redirect()->route('settings.account-profile')->with('status', 'Account profile updated successfully.');
     }
 
-    public function verification(): View
+    public function verification(Request $request): View
     {
-        return view('settings.verification');
+        $user = $request->user();
+        $account = $user?->currentAccount();
+        $profile = $account ? ($account->profile ?? AccountProfile::where('account_id', $account->id)->first()) : null;
+
+        $verificationStatus = $account?->verification_status
+            ?? session('client.verification.status', 'not_started');
+
+        return view('settings.verification', [
+            'account' => $account,
+            'profile' => $profile,
+            'verificationStatus' => $verificationStatus,
+        ]);
     }
 
     public function submitVerification(Request $request): RedirectResponse
     {
-        session(['client.verification_submitted' => true]);
+        $user = $request->user();
+        $account = $user?->currentAccount();
 
-        return redirect()->route('settings.verification')->with('status', 'Verification submitted.');
+        $status = $request->input('status');
+        if (!$status) {
+            $action = $request->input('action', 'submit');
+            $status = match($action) {
+                'resubmit', 'submit' => 'submitted',
+                'in_progress' => 'in_progress',
+                'additional_info' => 'additional_info_required',
+                'verify' => 'verified',
+                'reject' => 'rejected',
+                default => 'submitted',
+            };
+        }
+
+        if ($account) {
+            $account->verification_status = $status;
+            $account->save();
+        }
+
+        session(['client.verification.status' => $status]);
+        session(['client.verification_submitted' => in_array($status, ['submitted', 'verified'])]);
+
+        $message = match($status) {
+            'submitted' => 'Verification documents submitted for compliance review.',
+            'in_progress' => 'Verification status set to In Progress.',
+            'additional_info_required' => 'Additional information requested for verification.',
+            'verified' => 'Account successfully verified!',
+            'rejected' => 'Verification submission marked as rejected.',
+            default => 'Verification status updated.',
+        };
+
+        return redirect()->route('settings.verification')->with('status', $message);
     }
 
     public function usersAccess(Request $request): View
@@ -277,9 +319,32 @@ class SettingsController extends Controller
         return view('settings.modules.finance');
     }
 
+    public function updateModuleFinance(Request $request): RedirectResponse
+    {
+        $accountId = session('client.account_id', 1);
+        session(['client.finance_settings.' . $accountId => $request->all()]);
+
+        return redirect()->route('settings.modules.finance')->with('status', 'Finance module configuration saved successfully.');
+    }
+
     public function moduleHumanCapital(): View
     {
         return view('settings.modules.human-capital');
+    }
+
+    public function updateModuleHumanCapital(Request $request): RedirectResponse
+    {
+        $accountId = session('client.account_id', 1);
+        $settings = $request->all();
+        session(['client.human_capital_settings.' . $accountId => $settings]);
+
+        foreach ($settings as $key => $val) {
+            session(['client.settings.human_capital.' . $key => $val]);
+        }
+
+        return redirect()->route('settings.modules.human-capital')
+            ->with('status', 'Human Capital module configuration saved successfully.')
+            ->with('success', 'Human Capital module configuration saved successfully.');
     }
 
     public function moduleRecords(): View
@@ -287,9 +352,39 @@ class SettingsController extends Controller
         return view('settings.modules.records');
     }
 
+    public function updateModuleRecords(Request $request): RedirectResponse
+    {
+        $accountId = session('client.account_id', 1);
+        $settings = $request->all();
+        session(['client.records_settings.' . $accountId => $settings]);
+
+        foreach ($settings as $key => $val) {
+            session(['client.settings.records.' . $key => $val]);
+        }
+
+        return redirect()->route('settings.modules.records')
+            ->with('status', 'Records module configuration saved successfully.')
+            ->with('success', 'Records module configuration saved successfully.');
+    }
+
     public function moduleTransmittals(): View
     {
         return view('settings.modules.transmittals');
+    }
+
+    public function updateModuleTransmittals(Request $request): RedirectResponse
+    {
+        $accountId = session('client.account_id', 1);
+        $settings = $request->all();
+        session(['client.transmittals_settings.' . $accountId => $settings]);
+
+        foreach ($settings as $key => $val) {
+            session(['client.settings.transmittals.' . $key => $val]);
+        }
+
+        return redirect()->route('settings.modules.transmittals')
+            ->with('status', 'Transmittals module configuration saved successfully.')
+            ->with('success', 'Transmittals module configuration saved successfully.');
     }
 
     public function updateGeneral(Request $request): RedirectResponse

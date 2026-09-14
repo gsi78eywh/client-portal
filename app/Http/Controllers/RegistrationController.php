@@ -11,6 +11,10 @@ use App\Http\Requests\Registration\ProfessionInformationRequest;
 use App\Http\Requests\Registration\ProfileStepRequest;
 use App\Http\Requests\Registration\SecurityStepRequest;
 use App\Http\Requests\Registration\VerificationStepRequest;
+use App\Http\Requests\Registration\VerifyChannelRequest;
+use App\Services\Contact\ContactMaskingService;
+use App\Services\Contact\ContactVerificationService;
+use App\Services\Contact\PhoneNumberService;
 use App\Services\RegistrationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,7 +23,8 @@ use Illuminate\View\View;
 class RegistrationController extends Controller
 {
     public function __construct(
-        protected RegistrationService $registrationService
+        protected RegistrationService $registrationService,
+        protected ContactVerificationService $contactVerificationService
     ) {}
 
     /*
@@ -39,7 +44,18 @@ class RegistrationController extends Controller
 
     public function storeProfile(ProfileStepRequest $request): RedirectResponse
     {
-        $this->registrationService->putData('profile', $request->validated());
+        $validated = $request->validated();
+        $this->registrationService->putData('profile', $validated);
+
+        // Keep any existing personal account information strictly in sync with the updated profile
+        $profileFullName = $this->computeProfileFullName($validated);
+        $information = $this->registrationService->getData('information');
+        if (is_array($information) && (($information['account_type'] ?? '') === 'personal' || $this->registrationService->getAccountType() === 'personal' || isset($information['account_name']))) {
+            if (($information['account_type'] ?? '') === 'personal' || $this->registrationService->getAccountType() === 'personal') {
+                $information['account_name'] = $profileFullName ?: 'Personal Account';
+                $this->registrationService->putData('information', $information);
+            }
+        }
 
         return redirect()->route('register.account');
     }
@@ -134,15 +150,41 @@ class RegistrationController extends Controller
     public function personal(): View|RedirectResponse
     {
         if (!$this->ensureAccountType('personal')) {
-            return redirect()->route('register.account');
+            if (app()->environment('local')) {
+                if (!$this->registrationService->hasProfile()) {
+                    $this->registrationService->putData('profile', [
+                        'first_name' => 'Maria',
+                        'last_name' => 'Santos',
+                        'date_of_birth' => '1990-01-01',
+                        'country' => 'Philippines',
+                    ]);
+                }
+                $this->registrationService->putData('account', [
+                    'account_type' => 'personal',
+                ]);
+            } else {
+                return redirect()->route('register.account');
+            }
+        }
+
+        $profile = $this->registrationService->getData('profile', []);
+        $profileFullName = $this->computeProfileFullName($profile);
+        $defaultAccountName = $profileFullName ?: 'Personal Account';
+
+        // Keep session information synced with the computed profile full name
+        $information = $this->registrationService->getData('information', []);
+        if (is_array($information) && !empty($information)) {
+            $information['account_name'] = $defaultAccountName;
+            $this->registrationService->putData('information', $information);
         }
 
         return view('portal.registration.personal', [
             'registrationStep' => 3,
             'registrationTotalSteps' => $this->registrationService->getTotalSteps(),
-            'profile' => $this->registrationService->getData('profile', []),
+            'profile' => $profile,
             'account' => $this->registrationService->getData('account', []),
-            'information' => $this->registrationService->getData('information', []),
+            'information' => $information,
+            'defaultAccountName' => $defaultAccountName,
         ]);
     }
 
@@ -152,9 +194,21 @@ class RegistrationController extends Controller
             return redirect()->route('register.account');
         }
 
+        $validated = $request->validated();
+        $profile = $this->registrationService->getData('profile', []);
+        $profileFullName = $this->computeProfileFullName($profile);
+
+        // Always enforce the read-only account name from profile unless empty
+        $accountName = $profileFullName ?: ($validated['account_name'] ?? 'Personal Account');
+        $validated['account_name'] = $accountName;
+
+        if (empty($validated['country'])) {
+            $validated['country'] = $profile['country'] ?? 'Philippines';
+        }
+
         $this->registrationService->putData('information', [
             'account_type' => 'personal',
-            ...$request->validated(),
+            ...$validated,
         ]);
 
         return redirect()->route('register.contact');
@@ -163,7 +217,21 @@ class RegistrationController extends Controller
     public function profession(): View|RedirectResponse
     {
         if (!$this->ensureAccountType('profession')) {
-            return redirect()->route('register.account');
+            if (app()->environment('local')) {
+                if (!$this->registrationService->hasProfile()) {
+                    $this->registrationService->putData('profile', [
+                        'first_name' => 'Dr. Maria',
+                        'last_name' => 'Santos',
+                        'date_of_birth' => '1990-01-01',
+                        'country' => 'Philippines',
+                    ]);
+                }
+                $this->registrationService->putData('account', [
+                    'account_type' => 'profession',
+                ]);
+            } else {
+                return redirect()->route('register.account');
+            }
         }
 
         return view('portal.registration.profession', [
@@ -184,6 +252,16 @@ class RegistrationController extends Controller
         $data = $request->validated();
         $data['account_name'] = $data['practice_name'];
 
+        // Automatically preserve country from Step 1 profile if not present
+        $profile = $this->registrationService->getData('profile', []);
+        if (empty($data['country'])) {
+            $data['country'] = $profile['country'] ?? 'Philippines';
+        }
+
+        if (empty($data['business_email']) && !empty($data['professional_email'])) {
+            $data['business_email'] = $data['professional_email'];
+        }
+
         $this->registrationService->putData('information', [
             'account_type' => 'profession',
             ...$data,
@@ -195,7 +273,21 @@ class RegistrationController extends Controller
     public function business(): View|RedirectResponse
     {
         if (!$this->ensureAccountType('business')) {
-            return redirect()->route('register.account');
+            if (app()->environment('local')) {
+                if (!$this->registrationService->hasProfile()) {
+                    $this->registrationService->putData('profile', [
+                        'first_name' => 'Maria',
+                        'last_name' => 'Santos',
+                        'date_of_birth' => '1990-01-01',
+                        'country' => 'Philippines',
+                    ]);
+                }
+                $this->registrationService->putData('account', [
+                    'account_type' => 'business',
+                ]);
+            } else {
+                return redirect()->route('register.account');
+            }
         }
 
         return view('portal.registration.business', [
@@ -216,6 +308,13 @@ class RegistrationController extends Controller
         $data = $request->validated();
         $data['account_name'] = $data['registered_name'];
 
+        if (empty($data['business_email']) && !empty($data['company_email'])) {
+            $data['business_email'] = $data['company_email'];
+        }
+        if (empty($data['contact_number']) && !empty($data['company_phone'])) {
+            $data['contact_number'] = $data['company_phone'];
+        }
+
         $this->registrationService->putData('information', [
             'account_type' => 'business',
             ...$data,
@@ -227,7 +326,21 @@ class RegistrationController extends Controller
     public function invited(): View|RedirectResponse
     {
         if (!$this->ensureAccountType('invited')) {
-            return redirect()->route('register.account');
+            if (app()->environment('local')) {
+                if (!$this->registrationService->hasProfile()) {
+                    $this->registrationService->putData('profile', [
+                        'first_name' => 'Maria',
+                        'last_name' => 'Santos',
+                        'date_of_birth' => '1990-01-01',
+                        'country' => 'Philippines',
+                    ]);
+                }
+                $this->registrationService->putData('account', [
+                    'account_type' => 'invited',
+                ]);
+            } else {
+                return redirect()->route('register.account');
+            }
         }
 
         return view('portal.registration.invited', [
@@ -247,16 +360,23 @@ class RegistrationController extends Controller
 
         $validated = $request->validated();
 
+        // TODO: Look up the invitation by $validated['invitation_code'] and $validated['invitation_email']
+        //       in the invitations table. On mismatch, return back()->withErrors([...]).
+        //       The role, organization name, and invited_by are READ from the invitation record, not from the user.
+        //       Stub values below simulate a successful DB lookup for development.
         $this->registrationService->putData('information', [
-            'account_type' => 'invited',
-            'invitation_code' => $validated['invitation_code'],
+            'account_type'     => 'invited',
+            'invitation_code'  => $validated['invitation_code'],
             'invitation_email' => $validated['invitation_email'],
             'invitation_status' => 'found',
             'existing_account' => [
-                'name' => 'ABC Corporation',
-                'role' => 'Employee / Staff',
-                'invited_by' => 'Account Administrator',
+                'name'             => 'ABC Corporation',
+                'role'             => 'Employee / Staff',
+                'invited_by'       => 'Account Administrator',
+                'is_administrator' => false,
             ],
+            'relationship'     => 'Employee / Staff',
+            'is_administrator' => false,
         ]);
 
         return redirect()->route('register.contact');
@@ -271,9 +391,32 @@ class RegistrationController extends Controller
     public function contact(): View|RedirectResponse
     {
         if (!$this->registrationService->hasInformation()) {
-            return redirect()->route('register.information')->withErrors([
-                'information' => 'Please complete your account information first.',
-            ]);
+            if (app()->environment('local')) {
+                if (!$this->registrationService->hasProfile()) {
+                    $this->registrationService->putData('profile', [
+                        'first_name' => 'Maria',
+                        'last_name' => 'Santos',
+                        'date_of_birth' => '1990-01-01',
+                        'country' => 'Philippines',
+                    ]);
+                }
+                if (!$this->registrationService->hasAccount()) {
+                    $this->registrationService->putData('account', [
+                        'account_type' => 'profession',
+                    ]);
+                }
+                $this->registrationService->putData('information', [
+                    'account_type' => $this->registrationService->getAccountType() ?: 'profession',
+                    'account_name' => 'Santos Law & Consulting',
+                    'practice_name' => 'Santos Law & Consulting',
+                    'profession' => 'Lawyer',
+                    'country' => 'Philippines',
+                ]);
+            } else {
+                return redirect()->route('register.information')->withErrors([
+                    'information' => 'Please complete your account information first.',
+                ]);
+            }
         }
 
         return view('portal.registration.contact', [
@@ -291,8 +434,27 @@ class RegistrationController extends Controller
             return redirect()->route('register.information');
         }
 
-        $this->registrationService->putData('contact', $request->validated());
-        $this->registrationService->generateVerificationCode();
+        $validated = $request->validated();
+        if (!empty($validated['mobile_number'])) {
+            $validated['mobile_number'] = PhoneNumberService::normalize($validated['mobile_number']);
+        }
+
+        $this->registrationService->putData('contact', $validated);
+
+        // Dispatch initial OTPs for unverified channels
+        $profile = $this->registrationService->getData('profile', []);
+        $name = trim(($profile['first_name'] ?? '') . ' ' . ($profile['last_name'] ?? '')) ?: 'Client';
+
+        if (!$this->registrationService->isEmailVerified() && !empty($validated['email'])) {
+            $emailResult = $this->contactVerificationService->sendOtp('email', $validated['email'], $name);
+            if (!$emailResult['success']) {
+                return redirect()->route('register.contact')
+                    ->withInput()
+                    ->withErrors([
+                        'email' => $emailResult['error'] ?? "We couldn't send your verification email right now. Please try again.",
+                    ]);
+            }
+        }
 
         return redirect()->route('register.verification');
     }
@@ -306,46 +468,177 @@ class RegistrationController extends Controller
     public function verification(): View|RedirectResponse
     {
         if (!$this->registrationService->hasContact()) {
-            return redirect()->route('register.contact');
+            if (app()->environment('local')) {
+                if (!$this->registrationService->hasInformation()) {
+                    $this->registrationService->putData('profile', [
+                        'first_name' => 'Maria',
+                        'last_name' => 'Santos',
+                        'date_of_birth' => '1990-01-01',
+                        'country' => 'Philippines',
+                    ]);
+                    $this->registrationService->putData('account', ['account_type' => 'profession']);
+                    $this->registrationService->putData('information', [
+                        'account_type' => 'profession',
+                        'account_name' => 'Santos Law & Consulting',
+                        'profession' => 'Lawyer',
+                        'country' => 'Philippines',
+                    ]);
+                }
+                $this->registrationService->putData('contact', [
+                    'email' => 'client@ordo.com',
+                    'mobile_number' => '+639171234567',
+                ]);
+            } else {
+                return redirect()->route('register.contact');
+            }
         }
+
+        $contact = $this->registrationService->getData('contact', []);
+        $email = $contact['email'] ?? '';
+        $mobile = $contact['mobile_number'] ?? '';
+
+        $isEmailVerified = $this->registrationService->isEmailVerified();
+        $isMobileVerified = $this->registrationService->isMobileVerified();
+        $isContactVerified = $this->registrationService->isContactVerified();
+
+        // Calculate cooldowns
+        $emailRecord = $this->contactVerificationService->getLatestVerification('email', $email);
+        $smsRecord = $this->contactVerificationService->getLatestVerification('sms', $mobile);
+
+        $emailCooldown = $emailRecord ? $emailRecord->resendRemainingSeconds() : 0;
+        $smsCooldown = $smsRecord ? $smsRecord->resendRemainingSeconds() : 0;
 
         return view('portal.registration.verification', [
             'registrationStep' => 5,
             'registrationTotalSteps' => $this->registrationService->getTotalSteps(),
-            'contact' => $this->registrationService->getData('contact', []),
+            'contact' => $contact,
             'profile' => $this->registrationService->getData('profile', []),
+            'email' => $email,
+            'mobile' => $mobile,
+            'maskedEmail' => ContactMaskingService::maskEmail($email),
+            'maskedMobile' => PhoneNumberService::mask($mobile),
+            'isEmailVerified' => $isEmailVerified,
+            'isMobileVerified' => $isMobileVerified,
+            'isContactVerified' => $isContactVerified,
+            'emailCooldown' => $emailCooldown,
+            'smsCooldown' => $smsCooldown,
         ]);
     }
 
-    public function verifyContact(VerificationStepRequest $request): RedirectResponse
+    public function verifyEmail(VerifyChannelRequest $request): RedirectResponse
     {
         if (!$this->registrationService->hasContact()) {
             return redirect()->route('register.contact');
         }
 
+        $contact = $this->registrationService->getData('contact', []);
+        $email = $contact['email'] ?? '';
         $code = $request->validated('verification_code');
 
-        if (!$this->registrationService->verifyCode($code)) {
+        $result = $this->contactVerificationService->verifyOtp('email', $email, $code);
+
+        if (!$result['success']) {
             return redirect()->route('register.verification')->withErrors([
-                'verification_code' => 'The verification code is incorrect.',
+                'email_verification_code' => $result['error'],
             ])->withInput();
         }
 
-        return redirect()->route('register.security')->with('success', 'Your contact information has been verified.');
+        $this->registrationService->markEmailVerified();
+
+        return redirect()->route('register.security')->with('success', 'Email address verified successfully. Please set your account password.');
     }
 
-    public function resendVerification(): RedirectResponse
+    public function resendEmail(Request $request): RedirectResponse
     {
         if (!$this->registrationService->hasContact()) {
             return redirect()->route('register.contact');
         }
 
-        $this->registrationService->generateVerificationCode();
+        $contact = $this->registrationService->getData('contact', []);
+        $email = $contact['email'] ?? '';
+        $profile = $this->registrationService->getData('profile', []);
+        $name = trim(($profile['first_name'] ?? '') . ' ' . ($profile['last_name'] ?? '')) ?: 'Client';
 
-        return redirect()->route('register.verification')->with(
-            'success',
-            'A new verification code has been sent. Use 123456 for testing.'
-        );
+        $result = $this->contactVerificationService->sendOtp('email', $email, $name);
+
+        if (!$result['success']) {
+            return redirect()->route('register.verification')->withErrors([
+                'email_resend' => $result['error'],
+            ]);
+        }
+
+        return redirect()->route('register.verification')->with('success', 'A new verification code was sent to your email.');
+    }
+
+    public function verifyMobile(VerifyChannelRequest $request): RedirectResponse
+    {
+        if (!$this->registrationService->hasContact()) {
+            return redirect()->route('register.contact');
+        }
+
+        $contact = $this->registrationService->getData('contact', []);
+        $mobile = $contact['mobile_number'] ?? '';
+        $code = $request->validated('verification_code');
+
+        $result = $this->contactVerificationService->verifyOtp('sms', $mobile, $code);
+
+        if (!$result['success']) {
+            return redirect()->route('register.verification')->withErrors([
+                'mobile_verification_code' => $result['error'],
+            ])->withInput();
+        }
+
+        $this->registrationService->markMobileVerified();
+
+        if ($this->registrationService->isContactVerified()) {
+            return redirect()->route('register.security')->with('success', 'Both email and mobile contact verified successfully.');
+        }
+
+        return redirect()->route('register.verification')->with('success', 'Mobile number verified successfully. Please verify your email address.');
+    }
+
+    public function resendMobile(Request $request): RedirectResponse
+    {
+        if (!$this->registrationService->hasContact()) {
+            return redirect()->route('register.contact');
+        }
+
+        $contact = $this->registrationService->getData('contact', []);
+        $mobile = $contact['mobile_number'] ?? '';
+        $profile = $this->registrationService->getData('profile', []);
+        $name = trim(($profile['first_name'] ?? '') . ' ' . ($profile['last_name'] ?? '')) ?: 'Client';
+
+        $result = $this->contactVerificationService->sendOtp('sms', $mobile, $name);
+
+        if (!$result['success']) {
+            return redirect()->route('register.verification')->withErrors([
+                'mobile_resend' => $result['error'],
+            ]);
+        }
+
+        return redirect()->route('register.verification')->with('success', 'A new verification code was sent via SMS.');
+    }
+
+    public function verifyContact(Request $request): RedirectResponse
+    {
+        $channel = $request->input('channel');
+        if ($channel === 'mobile' || $channel === 'sms') {
+            $vr = app(VerifyChannelRequest::class);
+            return $this->verifyMobile($vr);
+        }
+
+        $vr = app(VerifyChannelRequest::class);
+        return $this->verifyEmail($vr);
+    }
+
+    public function resendVerification(Request $request): RedirectResponse
+    {
+        $channel = $request->input('channel');
+        if ($channel === 'mobile' || $channel === 'sms') {
+            return $this->resendMobile($request);
+        }
+
+        return $this->resendEmail($request);
     }
 
     /*
@@ -356,10 +649,33 @@ class RegistrationController extends Controller
 
     public function security(): View|RedirectResponse
     {
-        if (!$this->registrationService->isContactVerified()) {
-            return redirect()->route('register.verification')->withErrors([
-                'verification' => 'Please verify your contact information first.',
-            ]);
+        if (!$this->registrationService->isEmailVerified()) {
+            if (app()->environment('local')) {
+                if (!$this->registrationService->hasContact()) {
+                    $this->registrationService->putData('profile', [
+                        'first_name' => 'Maria',
+                        'last_name' => 'Santos',
+                        'date_of_birth' => '1990-01-01',
+                        'country' => 'Philippines',
+                    ]);
+                    $this->registrationService->putData('account', ['account_type' => 'profession']);
+                    $this->registrationService->putData('information', [
+                        'account_type' => 'profession',
+                        'account_name' => 'Santos Law & Consulting',
+                        'profession' => 'Lawyer',
+                        'country' => 'Philippines',
+                    ]);
+                    $this->registrationService->putData('contact', [
+                        'email' => 'client@ordo.com',
+                        'mobile_number' => '+639171234567',
+                    ]);
+                }
+                $this->registrationService->markEmailVerified();
+            } else {
+                return redirect()->route('register.verification')->withErrors([
+                    'verification' => 'Please complete email verification before proceeding to set your password.',
+                ]);
+            }
         }
 
         return view('portal.registration.security', [
@@ -372,9 +688,9 @@ class RegistrationController extends Controller
 
     public function storeSecurity(SecurityStepRequest $request): RedirectResponse
     {
-        if (!$this->registrationService->isContactVerified()) {
+        if (!$this->registrationService->isEmailVerified()) {
             return redirect()->route('register.verification')->withErrors([
-                'verification' => 'Please verify your contact information first.',
+                'verification' => 'Please verify your email address first.',
             ]);
         }
 
@@ -396,8 +712,45 @@ class RegistrationController extends Controller
 
     public function confirmation(): View|RedirectResponse
     {
-        if (!$this->registrationService->hasSecurity()) {
-            return redirect()->route('register');
+        if (!$this->registrationService->isEmailVerified() && !auth()->check()) {
+            if (app()->environment('local')) {
+                $this->registrationService->putData('profile', [
+                    'first_name' => 'Maria',
+                    'last_name' => 'Santos',
+                    'date_of_birth' => '1990-01-01',
+                    'country' => 'Philippines',
+                ]);
+                $this->registrationService->putData('account', ['account_type' => 'profession']);
+                $this->registrationService->putData('information', [
+                    'account_type' => 'profession',
+                    'account_name' => 'Santos Law & Consulting',
+                    'profession' => 'Lawyer',
+                    'country' => 'Philippines',
+                ]);
+                $this->registrationService->putData('contact', [
+                    'email' => 'client@ordo.com',
+                    'mobile_number' => '+639171234567',
+                ]);
+                $this->registrationService->markEmailVerified();
+                $this->registrationService->putData('security', [
+                    'password' => 'Secret123!',
+                    'password_set' => true,
+                ]);
+                $this->registrationService->putData('completed', true);
+            } else {
+                return redirect()->route('register.verification');
+            }
+        }
+
+        if (!$this->registrationService->hasSecurity() && !auth()->check()) {
+            if (app()->environment('local')) {
+                $this->registrationService->putData('security', [
+                    'password' => 'Secret123!',
+                    'password_set' => true,
+                ]);
+            } else {
+                return redirect()->route('register.security');
+            }
         }
 
         return view('portal.registration.confirmation', [
@@ -410,13 +763,17 @@ class RegistrationController extends Controller
 
     public function completeRegistration(): RedirectResponse
     {
-        if (!$this->registrationService->hasSecurity()) {
-            return redirect()->route('register');
+        if (!auth()->check()) {
+            if (!$this->registrationService->isEmailVerified()) {
+                return redirect()->route('register.verification');
+            }
+            if (!$this->registrationService->hasSecurity()) {
+                return redirect()->route('register.security');
+            }
+            $this->registrationService->completeRegistration();
         }
 
-        $this->registrationService->completeRegistration();
-
-        return redirect()->route('town-hall');
+        return redirect()->route('account.created');
     }
 
     /**
@@ -425,5 +782,20 @@ class RegistrationController extends Controller
     protected function ensureAccountType(string $type): bool
     {
         return $this->registrationService->hasAccount() && $this->registrationService->getAccountType() === $type;
+    }
+
+    /**
+     * Compute full name from a profile array.
+     */
+    protected function computeProfileFullName(array $profile): string
+    {
+        $parts = array_filter([
+            $profile['first_name'] ?? '',
+            $profile['middle_name'] ?? '',
+            $profile['last_name'] ?? '',
+            $profile['suffix'] ?? '',
+        ], fn($val) => !is_null($val) && trim((string)$val) !== '');
+
+        return implode(' ', $parts);
     }
 }

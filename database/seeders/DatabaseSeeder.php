@@ -73,6 +73,30 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        // User Mockup: John Abalde (john.abalde@jknc.io) matching the prototype mockup
+        $userMockup = User::firstOrCreate(
+            ['email' => 'john.abalde@jknc.io'],
+            [
+                'name' => 'John Abalde',
+                'password' => Hash::make('password123'),
+                'email_verified_at' => now(),
+            ]
+        );
+
+        UserProfile::updateOrCreate(
+            ['user_id' => $userMockup->id],
+            [
+                'first_name' => 'John',
+                'middle_name' => 'Kelly',
+                'last_name' => 'Abalde',
+                'suffix' => 'Jr.',
+                'date_of_birth' => '1990-01-01',
+                'gender' => 'male',
+                'country_region' => 'Philippines',
+                'mobile_number' => '+639170000000',
+            ]
+        );
+
         // -----------------------------------------------------------------
         // 2. ACCOUNTS & PROFILES
         // -----------------------------------------------------------------
@@ -80,7 +104,11 @@ class DatabaseSeeder extends Seeder
         // Primary Account (JK&C Inc.)
         $primaryAccount = Account::firstOrCreate(
             ['account_number' => 'ORDO-2026-00918274'],
-            ['status' => 'active']
+            [
+                'status' => 'active',
+                'account_type' => 'business',
+                'verification_status' => 'verified',
+            ]
         );
 
         AccountProfile::updateOrCreate(
@@ -107,11 +135,43 @@ class DatabaseSeeder extends Seeder
         if (!$userB->accounts()->where('accounts.id', $primaryAccount->id)->exists()) {
             $userB->accounts()->attach($primaryAccount->id, ['is_administrator' => 1]);
         }
+        if (!$userMockup->accounts()->where('accounts.id', $primaryAccount->id)->exists()) {
+            $userMockup->accounts()->attach($primaryAccount->id, ['is_administrator' => 1]);
+        }
+
+        // Demo User ID 5 for session compatibility
+        $user5 = User::firstOrCreate(
+            ['id' => 5],
+            [
+                'name' => 'John Kelly',
+                'email' => 'client5@ordo.com',
+                'password' => Hash::make('Password123!'),
+                'email_verified_at' => now(),
+            ]
+        );
+
+        UserProfile::updateOrCreate(
+            ['user_id' => $user5->id],
+            [
+                'first_name' => 'John',
+                'last_name' => 'Kelly',
+                'country_region' => 'Philippines',
+                'mobile_number' => '+639171234567',
+            ]
+        );
+        if (!$user5->accounts()->where('accounts.id', $primaryAccount->id)->exists()) {
+            $user5->accounts()->attach($primaryAccount->id, ['is_administrator' => 1]);
+        }
+
 
         // Secondary Account (Apex Global Ventures for Switch Account testing)
         $secondaryAccount = Account::firstOrCreate(
             ['account_number' => 'ORDO-2026-00384912'],
-            ['status' => 'active']
+            [
+                'status' => 'active',
+                'account_type' => 'business',
+                'verification_status' => 'verified',
+            ]
         );
 
         AccountProfile::updateOrCreate(
@@ -135,6 +195,34 @@ class DatabaseSeeder extends Seeder
         if (!$userA->accounts()->where('accounts.id', $secondaryAccount->id)->exists()) {
             $userA->accounts()->attach($secondaryAccount->id, ['is_administrator' => 1]);
         }
+
+        // Sample Account (ABC Corporation for Invited / Existing Account onboarding)
+        $abcAccount = Account::firstOrCreate(
+            ['account_number' => 'ORDO-2026-00192837'],
+            [
+                'status' => 'active',
+                'account_type' => 'business',
+                'verification_status' => 'verified',
+            ]
+        );
+
+        AccountProfile::updateOrCreate(
+            ['account_id' => $abcAccount->id],
+            [
+                'account_type' => 'Corporation',
+                'legal_name' => 'ABC Corporation',
+                'trade_name' => 'ABC Corp',
+                'tin' => '009-445-678-000',
+                'registration_number' => 'CS202409812',
+                'registration_authority' => 'Securities and Exchange Commission',
+                'registration_date' => '2024-03-10',
+                'industry_profession' => 'Commercial Trading & Logistics',
+                'primary_address' => 'Suite 801 Prestige Tower, F. Ortigas Jr. Road, Ortigas Center, Pasig City',
+                'business_email' => 'admin@abccorp.ph',
+                'contact_number' => '+63 2 8631 0000',
+                'website' => 'https://abccorp.ph',
+            ]
+        );
 
         // -----------------------------------------------------------------
         // 3. ANNOUNCEMENTS TABLE SEEDING
@@ -456,6 +544,62 @@ class DatabaseSeeder extends Seeder
                 'account_id' => $act['account_id'],
                 'title' => $act['title'],
             ], $act);
+        }
+
+        // -----------------------------------------------------------------
+        // 8. COMPLIANCE RECORDS SEEDING
+        // -----------------------------------------------------------------
+        $complianceData = [
+            [
+                'account_id' => $primaryAccount->id,
+                'user_id' => $userA->id,
+                'reference_no' => 'CMP-00124',
+                'title' => 'Annual SEC GIS (General Information Sheet)',
+                'agency' => 'SEC',
+                'category' => 'Corporate Filing',
+                'frequency' => 'Annually',
+                'effective_date' => '2026-01-15',
+                'due_date' => '2026-09-30',
+                'responsible_person' => 'Atty. Carmela Santos, CPA',
+                'status' => 'Due Soon',
+                'description' => 'Mandatory annual filing with Securities and Exchange Commission via SEC eFAST portal along with Corporate Secretary certificate.',
+                'attachment_name' => 'SEC_GIS_2026_Draft.pdf',
+            ],
+            [
+                'account_id' => $primaryAccount->id,
+                'user_id' => $userA->id,
+                'reference_no' => 'CMP-00118',
+                'title' => 'BIR Form 1702Q – Quarterly Income Tax Return (Q3)',
+                'agency' => 'BIR',
+                'category' => 'Tax Filing',
+                'frequency' => 'Quarterly',
+                'effective_date' => '2026-07-01',
+                'due_date' => '2026-10-15',
+                'responsible_person' => 'John Kelly, CPA',
+                'status' => 'Scheduled',
+                'description' => 'Quarterly corporate income tax computation and creditable withholding tax 2307 reconciliation schedule.',
+            ],
+            [
+                'account_id' => $primaryAccount->id,
+                'user_id' => $userA->id,
+                'reference_no' => 'CMP-00104',
+                'title' => 'LGU Mayor\'s Permit & Business Tax Early Renewal',
+                'agency' => 'LGU',
+                'category' => 'Business Permit',
+                'frequency' => 'Annually',
+                'effective_date' => '2026-08-01',
+                'due_date' => '2026-11-20',
+                'responsible_person' => 'Corporate Affairs Specialist',
+                'status' => 'Monitoring',
+                'description' => 'Validation of barangay business clearance, community tax certificate (CTC), and fire inspection compliance.',
+            ],
+        ];
+
+        foreach ($complianceData as $cmp) {
+            \App\Models\ComplianceRecord::firstOrCreate(
+                ['reference_no' => $cmp['reference_no']],
+                $cmp
+            );
         }
     }
 }

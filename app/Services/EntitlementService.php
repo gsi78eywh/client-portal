@@ -94,7 +94,7 @@ class EntitlementService
     }
 
     /**
-     * Determine module access status: 'trial', 'free', or 'locked'.
+     * Determine module access status: 'trial', 'free', 'limited', 'active', or 'locked'.
      */
     public function getModuleStatus(string $moduleKey, ?Account $account = null): string
     {
@@ -102,12 +102,21 @@ class EntitlementService
             return 'locked';
         }
 
+        $protoState = session('client.subscription.status', 'trial');
+        if ($protoState === 'paid' || $protoState === 'active') {
+            return 'active';
+        }
+
+        if ($protoState === 'limited') {
+            return $moduleKey === 'records' ? 'limited' : 'locked';
+        }
+
         // If 30-day trial is active, all 6 modules are trial-accessible
-        if ($this->isTrialActive($account)) {
+        if ($protoState === 'trial' && $this->isTrialActive($account)) {
             return 'trial';
         }
 
-        // After trial: check if user has retained this module on Free plan
+        // After trial or when in free plan: check if user has retained this module on Free plan
         $freeModules = session('client.free_modules', ['entity-governance', 'compliance', 'records']);
         if (in_array($moduleKey, $freeModules, true)) {
             return 'free';
@@ -125,21 +134,102 @@ class EntitlementService
     }
 
     /**
-     * Get all modules with their current access metadata.
+     * Get all modules with their current access metadata and statistics.
      */
     public function getAllModules(?Account $account = null): array
     {
+        $statsMap = [
+            'entity-governance' => ['kpi' => '1 Entity', 'kpi_sub' => '4 Actions'],
+            'compliance' => ['kpi' => '14 Active', 'kpi_sub' => '2 Due Soon'],
+            'finance' => ['kpi' => '₱225K', 'kpi_sub' => '3 Pending'],
+            'human-capital' => ['kpi' => '18 People', 'kpi_sub' => '2 On Leave'],
+            'records' => ['kpi' => '45 Records', 'kpi_sub' => '220 MB'],
+            'transmittals' => ['kpi' => '8 Active', 'kpi_sub' => '2 Pending'],
+        ];
+
         $modules = [];
         foreach (self::MODULES as $key => $meta) {
             $status = $this->getModuleStatus($key, $account);
+            $accessLabel = match ($status) {
+                'trial' => 'Trial',
+                'free' => 'Free',
+                'limited' => 'Limited',
+                'active' => 'Active',
+                default => 'Locked',
+            };
+
             $modules[$key] = [
                 ...$meta,
                 'status' => $status,
                 'is_accessible' => $status !== 'locked',
+                'access_label' => $accessLabel,
+                'kpi' => $statsMap[$key]['kpi'] ?? '—',
+                'kpi_sub' => $statsMap[$key]['kpi_sub'] ?? '—',
             ];
         }
 
         return $modules;
+    }
+
+    /**
+     * Get lifecycle banner data matching the active account status.
+     */
+    public function getLifecycleData(?Account $account = null): array
+    {
+        $state = session('client.subscription.status', 'trial');
+        $trialDays = $this->getTrialDaysRemaining($account);
+        $isVerified = (bool) (session('client.verification_submitted', false) || session('status') === 'Verification submitted.' || $state === 'paid');
+
+        return match ($state) {
+            'free' => [
+                'state' => 'free',
+                'title' => 'ORDO Free Plan',
+                'subtitle' => 'Your three selected Business modules remain available. Additional modules can be unlocked via subscriptions.',
+                'badge' => 'Free Plan',
+                'verified_badge' => $isVerified ? 'Verified' : 'Verification pending',
+                'days_count' => '—',
+                'days_label' => 'Standard',
+                'cta_label' => 'Manage access',
+                'cta_route' => 'jkc.subscriptions',
+                'show_countdown' => false,
+            ],
+            'limited' => [
+                'state' => 'limited',
+                'title' => 'Limited Access',
+                'subtitle' => 'Complete verification to restore full commercial access and unlock your verification benefit.',
+                'badge' => 'Action required',
+                'verified_badge' => 'Unverified',
+                'days_count' => '0',
+                'days_label' => 'Days left',
+                'cta_label' => 'Complete verification',
+                'cta_route' => 'settings.verification',
+                'show_countdown' => true,
+            ],
+            'paid', 'active' => [
+                'state' => 'paid',
+                'title' => 'ORDO Business',
+                'subtitle' => 'Verified commercial subscription active with full access across all 6 business modules.',
+                'badge' => 'Active',
+                'verified_badge' => 'Verified',
+                'days_count' => '—',
+                'days_label' => 'Annual',
+                'cta_label' => 'Manage access',
+                'cta_route' => 'jkc.subscriptions',
+                'show_countdown' => false,
+            ],
+            default => [
+                'state' => 'trial',
+                'title' => '30-Day Full Access',
+                'subtitle' => 'All six Business modules are available during your trial. Before the trial ends, choose up to three Business modules to keep on the Free Plan.',
+                'badge' => 'Trial',
+                'verified_badge' => $isVerified ? 'Verified' : 'Verification pending',
+                'days_count' => (string) max(1, $trialDays),
+                'days_label' => 'Days remaining',
+                'cta_label' => 'Review access',
+                'cta_route' => 'jkc.subscriptions',
+                'show_countdown' => true,
+            ],
+        };
     }
 
     /**
@@ -238,7 +328,7 @@ class EntitlementService
         }
 
         // Check verification submission
-        if (session('client.verification_submitted', false) || session('status') === 'Verification submitted.') {
+        if (session('client.verification_submitted', false) || session('status') === 'Verification submitted.' || session('client.subscription.status') === 'paid') {
             $steps['account_verification']['completed'] = true;
         }
 

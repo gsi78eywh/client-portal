@@ -86,7 +86,7 @@
                     </div>
                     <div class="flex justify-between text-slate-600">
                         <span>Next Milestone:</span>
-                        <span class="text-slate-800 font-medium">{{ $renewalDate }}</span>
+                        <span class="text-slate-800 font-medium">{{ $renewalDate ?? now()->addDays(30)->format('M d, Y') }}</span>
                     </div>
                 </div>
             </div>
@@ -223,10 +223,16 @@
                     </div>
 
                     <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                        <a href="{{ url('/' . $key) }}" class="font-semibold text-blue-600 hover:text-blue-800">
-                            Open Workspace &rarr;
-                        </a>
-                        <a href="{{ url('/settings/modules/' . $key) }}" class="text-slate-400 hover:text-slate-600">
+                        @if(($mod['status'] ?? '') !== 'locked')
+                            <a href="{{ route($key) }}" class="font-semibold text-blue-600 hover:text-blue-800">
+                                Open Workspace &rarr;
+                            </a>
+                        @else
+                            <a href="javascript:void(0)" onclick="showLockedModule('{{ $key }}')" class="font-semibold text-rose-600 hover:text-rose-800">
+                                🔒 Locked (Details) &rarr;
+                            </a>
+                        @endif
+                        <a href="{{ route('settings.subscription-usage') }}" class="text-slate-400 hover:text-slate-600">
                             Configure
                         </a>
                     </div>

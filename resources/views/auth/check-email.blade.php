@@ -2,79 +2,57 @@
 
 @section('title', 'Check Your Email | ORDO')
 
-@section('left-panel')
-    <div class="hero-section">
-        <span class="hero-tag">Verification</span>
-        <h1 class="hero-title">Check your inbox to proceed.</h1>
-        <p class="hero-description">We have sent password reset instructions to your registered email address. Follow the secure link to continue restoring access to your ORDO workspace.</p>
-
-        <div class="security-highlights">
-            <div class="security-item">
-                <div class="security-icon">&#10003;</div>
-                <div class="security-content">
-                    <div class="security-title">Secure Reset Link</div>
-                    <div class="security-description">Use the protected link in your email.</div>
-                </div>
-            </div>
-            <div class="security-item">
-                <div class="security-icon">60</div>
-                <div class="security-content">
-                    <div class="security-title">Expires in 60 Minutes</div>
-                    <div class="security-description">Complete your reset before it expires.</div>
-                </div>
-            </div>
-        </div>
-    </div>
-@endsection
+@section('hero-tag', 'VERIFICATION')
+@section('hero-title', 'Check your inbox to proceed.')
+@section('hero-description', 'Follow the secure instructions sent to your email to restore access to your ORDO workspace.')
 
 @section('content')
-    <div class="icon-circle" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-            <polyline points="22,6 12,13 2,6" />
-        </svg>
-    </div>
-
-    <span class="form-tag">Password Reset</span>
-    <h2 class="form-title">Check your email</h2>
-    <p class="form-subtitle">We've sent a password reset link to your registered email address.</p>
-
-    <div class="info-box">
-        <span class="info-icon" aria-hidden="true">i</span>
-        <span>Didn't receive the email? Check your spam or junk folder. If it is not there, you can request a new reset link below.</span>
-    </div>
+    <div class="kicker">PASSWORD RECOVERY</div>
+    <h2>Check your email</h2>
+    <p>We’ve sent secure password reset instructions to your registered email address.</p>
 
     @php
         $resetEmail = $email ?? request('email', session('password_reset.email'));
     @endphp
 
     @if ($resetEmail)
-        <div class="email-card">
-            <div class="email-card-icon" aria-hidden="true">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                    <polyline points="22,6 12,13 2,6" />
+        <div style="display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-radius: var(--radius); background: #eff6ff; border: 1.5px solid #bfdbfe; margin-bottom: 24px;">
+            <div style="width: 40px; height: 40px; border-radius: 10px; background: var(--blue); color: #ffffff; display: grid; place-items: center; flex-shrink: 0;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2"/>
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
                 </svg>
             </div>
-            <div class="email-card-content">
-                <div class="email-card-label">Reset link sent to</div>
-                <div class="email-card-value">{{ $resetEmail }}</div>
+            <div style="flex: 1; overflow: hidden;">
+                <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--blue);">Reset link sent to</div>
+                <div style="font-size: 14px; font-weight: 700; color: #1e3a8a; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; margin-top: 2px;">{{ $resetEmail }}</div>
             </div>
         </div>
     @endif
 
-    <form method="POST" action="{{ route('password.email') }}">
-        @csrf
-        <input type="hidden" name="email" value="{{ $resetEmail }}">
-        <button type="submit" class="btn-submit">Resend Reset Link</button>
-    </form>
+    <div class="auth-stack">
+        {{-- PROCEED DIRECTLY BUTTON (FOR TESTING & CLIENT DEMO) --}}
+        <a href="{{ route('password.reset', ['email' => $resetEmail]) }}" class="btn primary" style="width: 100%;">
+            Proceed to Set New Password &rarr;
+        </a>
 
-    <a href="{{ route('login') }}" class="back-link">
-        <span class="back-link-arrow" aria-hidden="true">&larr;</span>
-        <span>Back to Sign In</span>
+        {{-- RESEND FORM --}}
+        <form method="POST" action="{{ route('password.email') }}" style="width: 100%;">
+            @csrf
+            <input type="hidden" name="email" value="{{ $resetEmail }}">
+            <button type="submit" class="btn ghost" style="width: 100%;">
+                Resend Reset Email
+            </button>
+        </form>
+    </div>
+
+    <div class="auth-sep">Or return to login</div>
+
+    <a href="{{ route('login') }}" class="btn ghost" style="width: 100%; display: flex;">
+        &larr; Back to Sign in
     </a>
 
-    <p class="terms-text">
-        By continuing, you agree to ORDO <a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a>.
-    </p>
+    <div class="auth-footer">
+        By continuing, you agree to ORDO Terms of Use and Privacy Policy.
+    </div>
 @endsection

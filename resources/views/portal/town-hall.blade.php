@@ -1,1187 +1,521 @@
 @extends('layouts.client')
 
-@section('title', 'Town Hall - ORDO')
+@section('title', 'Town Hall - ORDO Commercial Client Portal')
 
 @section('content')
+@php
+    $firstName = 'John';
+    $fullName = 'Client';
+    if (auth()->check()) {
+        $userObj = auth()->user();
+        $nameParts = explode(' ', $userObj->name);
+        $firstName = $nameParts[0] ?? 'Client';
+        $fullName = $userObj->name;
+    }
+    $hour = (int) now()->format('H');
+    $greeting = match (true) {
+        $hour < 12 => 'Good morning',
+        $hour < 17 => 'Good afternoon',
+        default => 'Good evening',
+    };
+    $accountName = $account?->profile?->legal_name ?? $account?->name ?? session('client.account.name', 'Your Workspace');
+    $rawAccountType = $account?->account_type ?? session('client.account.type', 'business');
+    $profileAccountType = $account?->profile?->account_type;
 
-<div class="townhall-page">
+    $pivot = (auth()->check() && $account) ? auth()->user()->accounts->firstWhere('id', $account->id)?->pivot : null;
+    $relationship = $pivot?->relationship ?? session('client.account.relationship', 'Owner');
+    $isAdministrator = $pivot ? (bool)$pivot->is_administrator : (bool)session('client.account.is_administrator', true);
 
-{{-- =========================================================
-    PAGE HEADER
-========================================================== --}}
-<header class="townhall-header">
+    $isPersonal = ($rawAccountType === 'personal' || $profileAccountType === 'Individual');
+    $isProfession = ($rawAccountType === 'profession' || $profileAccountType === 'Professional / Practitioner');
+    $isInvited = ($rawAccountType === 'invited');
 
-    <div class="townhall-header-copy">
+    $displayAccountType = match(true) {
+        $isPersonal => 'Individual',
+        $isProfession => 'Professional / Practitioner',
+        $isInvited => 'Joined Account',
+        default => ($profileAccountType ?? 'Corporation'),
+    };
 
-        <div class="eyebrow">
-            TOWN HALL
+    $entitlementService = app(\App\Services\EntitlementService::class);
+    $bannerData = $lifecycle ?? $entitlementService->getLifecycleData($account);
+    $progressData = $progress ?? (auth()->check() ? $entitlementService->getSetupProgress(auth()->user(), $account) : [
+        'percentage' => 50,
+        'steps' => [
+            'account_created' => ['completed' => true],
+            'contact_confirmed' => ['completed' => true],
+            'account_profile' => ['completed' => false],
+            'account_verification' => ['completed' => false],
+        ],
+        'current_action' => ['label' => 'Complete Account Profile', 'route' => 'settings.account-profile']
+    ]);
+    $steps = $progressData['steps'] ?? [];
+    $completedCount = 0;
+    foreach ($steps as $st) {
+        if (!empty($st['completed'])) {
+            $completedCount++;
+        }
+    }
+    $percentage = $progressData['percentage'] ?? ($completedCount * 25);
+    $modulesList = $modules ?? $entitlementService->getAllModules($account);
+
+    $isVerifCompleted = (bool) ($steps['account_verification']['completed'] ?? false);
+    $isProfileCompleted = (bool) ($steps['account_profile']['completed'] ?? false);
+    $actionCount = 1 + ($isVerifCompleted ? 0 : 1) + ($isProfileCompleted ? 0 : 1);
+
+    $moduleIcons = [
+        'entity-governance' => '<path d="M4 21V5l8-3 8 3v16"></path><path d="M8 8h2M14 8h2M8 12h2M14 12h2M8 16h2M14 16h2"></path><path d="M2 21h20"></path>',
+        'compliance' => '<circle cx="12" cy="12" r="9"></circle><path d="M8 12l2.6 2.6L16.5 9"></path>',
+        'finance' => '<path d="M3 7h16a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"></path><path d="M3 7l2-3h12l2 3"></path><path d="M16 12h5"></path>',
+        'human-capital' => '<path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"></path>',
+        'records' => '<path d="M3 6h6l2 2h10v11a2 2 0 01-2 2H5a2 2 0 01-2-2V6z"></path>',
+        'transmittals' => '<path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4 20-7z"></path>',
+    ];
+@endphp
+
+{{-- PAGE HEADER WITH ADAPTIVE ACCOUNT CONTEXT --}}
+<div class="page-head">
+    <div class="page-title">
+        <div class="kicker">
+            Town Hall &bull; {{ $accountName }} &bull; Type: {{ $displayAccountType }}
+            @if($isInvited)
+                &bull; Relationship: {{ $relationship }} &bull; Administrator: {{ $isAdministrator ? 'Yes' : 'No' }}
+            @elseif(!empty($relationship))
+                &bull; Role: {{ $relationship }}
+            @endif
         </div>
-
-        <h1 class="townhall-title">
-            {{ $greeting ?? 'Good afternoon, Client.' }}
-        </h1>
-
-        <p class="townhall-description">
-            Here is what needs your attention across your ORDO workspace.
-        </p>
-
+        @if($isPersonal)
+            <h1>{{ $greeting }}, {{ $fullName }}.</h1>
+            <p>Here is what needs your attention across your personal ORDO workspace for <strong>{{ $accountName }}</strong>.</p>
+        @else
+            <h1>{{ $greeting }}, {{ $firstName }}.</h1>
+            <p>Here is what needs your attention across your ORDO workspace for <strong>{{ $accountName }}</strong> ({{ $displayAccountType }}).</p>
+        @endif
     </div>
-
-    <div class="header-actions">
-
-        <a href="{{ url('/settings/account-profile') }}"
-           class="secondary-action">
-
-            <span class="action-button-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                    <circle cx="12" cy="8" r="3.5"/>
-                    <path d="M5 20c.8-3.5 3.2-5.5 7-5.5s6.2 2 7 5.5"/>
-                </svg>
-            </span>
-
-            <span>Complete account</span>
-
-            <svg class="button-arrow"
-                 viewBox="0 0 24 24"
-                 aria-hidden="true">
-                <path d="M5 12h13"/>
-                <path d="m13 6 6 6-6 6"/>
-            </svg>
-
-        </a>
-
+    <div class="page-actions">
+        <a href="{{ route('settings.account-profile') }}" class="btn ghost">Complete account</a>
     </div>
+</div>
 
-</header>
-
-
-{{-- =========================================================
-    ACCESS STATUS
-========================================================== --}}
-<section class="access-card">
-
-    <div class="access-glow access-glow-one"></div>
-    <div class="access-glow access-glow-two"></div>
-
-    <div class="access-main">
-
-        <div class="access-label">
-            YOUR ORDO ACCESS &mdash; {{ $account?->profile?->legal_name ?? session('client.account.name', 'ORDO Workspace') }}
+{{-- TRIAL / LIFECYCLE ACCESS BANNER --}}
+<section class="trial-banner">
+    <div>
+        <div class="kicker" style="color:#70a7ff">{{ $accountName }} &bull; YOUR ORDO ACCESS</div>
+        <h2>{{ $bannerData['title'] }}</h2>
+        <p>{{ $bannerData['subtitle'] }}</p>
+        <div class="flex gap8 wrap" style="margin-top:14px">
+            <span class="badge" style="background:rgba(255,255,255,.10);color:white">{{ $bannerData['badge'] }}</span>
+            <span class="badge" style="background:rgba(255,255,255,.10);color:white">{{ $bannerData['verified_badge'] }}</span>
         </div>
-
-        <div class="access-title-row">
-
-            <h2>
-                30-Day Full Access
-            </h2>
-
-            <span class="status-pill trial">
-                <span class="status-dot"></span>
-                Trial
-            </span>
-
-            <span class="status-pill pending">
-
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <circle cx="12" cy="12" r="9"/>
-                    <path d="M12 7v5l3 2"/>
-                </svg>
-
-                Verification pending
-
-            </span>
-
-        </div>
-
-        <p class="access-description">
-            All six Business modules are currently available during your
-            trial. Complete your account verification before your access
-            period ends to continue using ORDO.
-        </p>
-
-        <div class="access-meta">
-
-            <div class="meta-item">
-                <span class="meta-label">
-                    Access period
-                </span>
-
-                <strong>
-                    30 days
-                </strong>
-            </div>
-
-            <div class="meta-divider"></div>
-
-            <div class="meta-item">
-                <span class="meta-label">
-                    Business modules
-                </span>
-
-                <strong>
-                    6 available
-                </strong>
-            </div>
-
-            <div class="meta-divider"></div>
-
-            <div class="meta-item">
-                <span class="meta-label">
-                    Free Plan
-                </span>
-
-                <strong>
-                    Up to 3 modules
-                </strong>
-            </div>
-
-        </div>
-
     </div>
-
-
-    <div class="access-side">
-
-        <div class="progress-ring"
-             aria-label="{{ $trialDaysRemaining ?? 30 }} days remaining">
-
-            <div class="progress-ring-inner">
-
-                <strong>
-                    {{ $trialDaysRemaining ?? 30 }}
-                </strong>
-
-                <span>
-                    days remaining
-                </span>
-
+    <div class="trial-meta">
+        @if(!empty($bannerData['show_countdown']))
+            <div class="days">
+                <div>
+                    <b>{{ $bannerData['days_count'] }}</b><br>
+                    <span>{{ $bannerData['days_label'] }}</span>
+                </div>
             </div>
-
-        </div>
-
-        <a href="{{ url('/settings/subscription-usage') }}"
-           class="primary-button">
-
-            <span>
-                Review access
-            </span>
-
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M5 12h13"/>
-                <path d="m13 6 6 6-6 6"/>
-            </svg>
-
-        </a>
-
+        @else
+            <div class="days" style="min-width:110px;">
+                <div>
+                    <b style="font-size:18px;">{{ $bannerData['badge'] }}</b><br>
+                    <span>{{ $bannerData['days_label'] }}</span>
+                </div>
+            </div>
+        @endif
+        <a href="{{ route($bannerData['cta_route']) }}" class="btn primary">{{ $bannerData['cta_label'] }}</a>
     </div>
-
 </section>
 
-
-{{-- =========================================================
-    TOP GRID
-========================================================== --}}
-<div class="top-grid">
-
-    {{-- ACCOUNT SETUP --}}
-    <section class="panel setup-panel">
-
-        <div class="panel-heading">
-
+{{-- SETUP PROGRESS & ACTION CENTER --}}
+<div class="grid-2" style="margin-bottom:18px">
+    {{-- SETUP CARD --}}
+    <div class="card setup-card">
+        <div class="setup-head">
             <div>
-
-                <div class="panel-eyebrow">
-                    ACCOUNT SETUP
+                <div class="kicker">ACCOUNT SETUP</div>
+                <h3 style="margin:3px 0 2px">{{ $completedCount }} of 4 steps complete</h3>
+                <div class="small muted">
+                    @if($completedCount === 4)
+                        All setup steps completed. Your workspace is fully verified!
+                    @else
+                        Complete your profile and verification within 30 days.
+                    @endif
                 </div>
-
-                <h2>
-                    Complete your account
-                </h2>
-
-                <p>
-                    2 of 4 setup steps are complete.
-                </p>
-
             </div>
-
-            <a href="{{ url('/settings/account-profile') }}"
-               class="text-button">
-
-                Continue setup
-
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M5 12h13"/>
-                    <path d="m13 6 6 6-6 6"/>
-                </svg>
-
-            </a>
-
+            @if($completedCount < 4)
+                <a href="{{ route($progressData['current_action']['route'] ?? 'settings.verification') }}" class="btn secondary sm">{{ $progressData['current_action']['label'] ?? 'Continue setup' }}</a>
+            @else
+                <span class="badge green">Complete</span>
+            @endif
         </div>
-
-
-        <div class="setup-progress">
-
-            <div class="progress-info">
-
-                <span>
-                    Overall progress
-                </span>
-
-                <strong>
-                    {{ $progress['percentage'] ?? 25 }}%
-                </strong>
-
-            </div>
-
-            <div class="progress-track"
-                 role="progressbar"
-                 aria-valuemin="0"
-                 aria-valuemax="100"
-                 aria-valuenow="{{ $progress['percentage'] ?? 25 }}">
-
-                <div class="progress-value" style="width: {{ $progress['percentage'] ?? 25 }}%"></div>
-
-            </div>
-
+        <div class="progress">
+            <span style="width:{{ $percentage }}%"></span>
         </div>
-
-
         <div class="setup-steps">
-
-            <div class="setup-step complete">
-
-                <div class="step-marker">
-
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="m6 12 4 4 8-8"/>
-                    </svg>
-
-                </div>
-
-                <div class="step-content">
-
-                    <strong>
-                        Account created
-                    </strong>
-
-                    <span>
-                        Completed
-                    </span>
-
-                </div>
-
+            <div class="setup-step {{ ($steps['account_created']['completed'] ?? true) ? 'done' : '' }}">
+                <div class="stepnum">{{ ($steps['account_created']['completed'] ?? true) ? '✓' : '1' }}</div>
+                <b>Account created</b>
+                <span>Completed</span>
             </div>
-
-
-            <div class="setup-step complete">
-
-                <div class="step-marker">
-
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="m6 12 4 4 8-8"/>
-                    </svg>
-
-                </div>
-
-                <div class="step-content">
-
-                    <strong>
-                        Contact confirmed
-                    </strong>
-
-                    <span>
-                        Completed
-                    </span>
-
-                </div>
-
+            <div class="setup-step {{ ($steps['contact_confirmed']['completed'] ?? true) ? 'done' : '' }}">
+                <div class="stepnum">{{ ($steps['contact_confirmed']['completed'] ?? true) ? '✓' : '2' }}</div>
+                <b>Contact confirmed</b>
+                <span>Completed</span>
             </div>
-
-
-            <div class="setup-step current">
-
-                <div class="step-marker">
-                    3
-                </div>
-
-                <div class="step-content">
-
-                    <strong>
-                        Account Profile
-                    </strong>
-
-                    <span>
-                        Incomplete
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <div class="setup-step">
-
-                <div class="step-marker">
-                    4
-                </div>
-
-                <div class="step-content">
-
-                    <strong>
-                        Verification
-                    </strong>
-
-                    <span>
-                        Not submitted
-                    </span>
-
-                </div>
-
-            </div>
-
+            <a href="{{ route('settings.account-profile') }}" class="setup-step {{ ($steps['account_profile']['completed'] ?? false) ? 'done' : '' }}" style="text-decoration:none;color:inherit;">
+                <div class="stepnum">{{ ($steps['account_profile']['completed'] ?? false) ? '✓' : '3' }}</div>
+                <b>Account Profile</b>
+                <span>{{ ($steps['account_profile']['completed'] ?? false) ? 'Completed' : 'Incomplete' }}</span>
+            </a>
+            <a href="{{ route('settings.verification') }}" class="setup-step {{ ($steps['account_verification']['completed'] ?? false) ? 'done' : '' }}" style="text-decoration:none;color:inherit;">
+                <div class="stepnum">{{ ($steps['account_verification']['completed'] ?? false) ? '✓' : '4' }}</div>
+                <b>Verification</b>
+                <span>{{ ($steps['account_verification']['completed'] ?? false) ? 'Verified' : 'Not submitted' }}</span>
+            </a>
         </div>
-
-    </section>
-
+    </div>
 
     {{-- ACTION CENTER --}}
-    <section class="panel action-panel">
-
-        <div class="panel-heading">
-
+    <div class="card pad">
+        <div class="title-row">
             <div>
-
-                <div class="panel-eyebrow">
-                    ACTION CENTER
-                </div>
-
-                <h2>
-                    Needs your attention
-                </h2>
-
-                <p>
-                    Prioritized items across your workspace.
-                </p>
-
+                <div class="kicker">ACTION CENTER</div>
+                <h3>Needs your attention</h3>
             </div>
-
-            <span class="count-badge">
-                3 items
-            </span>
-
+            <span class="badge {{ $actionCount > 0 ? 'amber' : 'green' }}">{{ $actionCount }} {{ Str::plural('item', $actionCount) }}</span>
         </div>
-
-
         <div class="action-list">
+            @if(!$isVerifCompleted)
+                <a href="{{ route('settings.verification') }}" class="action-item" style="text-decoration:none; color:inherit;">
+                    <div class="action-icon">
+                        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            <path d="M9 12l2 2 4-4"></path>
+                        </svg>
+                    </div>
+                    <div class="action-main">
+                        <b>Complete Account Verification</b>
+                        <span>Required within your 30-day access period</span>
+                    </div>
+                    <span class="priority high">High</span>
+                </a>
+            @endif
 
-            {{-- VERIFICATION --}}
-            <a href="{{ url('/settings/verification') }}"
-               class="action-row">
+            @if(!$isProfileCompleted)
+                <div class="action-item" style="cursor:pointer;" onclick="window.location='{{ route('settings.account-profile') }}'">
+                    <div class="action-icon">
+                        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 2h8l4 4v16H6z"></path>
+                            <path d="M14 2v5h5"></path>
+                        </svg>
+                    </div>
+                    <div class="action-main">
+                        <b>Upload BIR registration document</b>
+                        <span>Requested for Account Profile</span>
+                    </div>
+                    <span class="priority med">Due soon</span>
+                </div>
+            @endif
 
-                <div class="action-symbol">
-
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M12 3 20 6v5c0 5.2-3.3 8.8-8 10-4.7-1.2-8-4.8-8-10V6l8-3Z"/>
-                        <path d="m8.5 12 2.2 2.2 4.8-5"/>
+            <a href="{{ route('compliance') }}" class="action-item" style="text-decoration:none; color:inherit;">
+                <div class="action-icon">
+                    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <path d="M8 12l2.6 2.6L16.5 9"></path>
                     </svg>
-
                 </div>
-
-                <div class="action-copy">
-
-                    <strong>
-                        Complete Account Verification
-                    </strong>
-
-                    <span>
-                        Required within your 30-day access period
-                    </span>
-
+                <div class="action-main">
+                    <b>Review August compliance deadlines</b>
+                    <span>2 obligations due within 7 days</span>
                 </div>
-
-                <span class="priority high">
-                    High
-                </span>
-
-                <svg class="row-arrow"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
-                    <path d="M5 12h13"/>
-                    <path d="m13 6 6 6-6 6"/>
-                </svg>
-
+                <span class="priority med">Due soon</span>
             </a>
 
-
-            {{-- DOCUMENT --}}
-            <a href="{{ url('/settings/account-profile') }}"
-               class="action-row">
-
-                <div class="action-symbol">
-
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M6 3h8l4 4v14H6z"/>
-                        <path d="M14 3v5h4"/>
-                        <path d="M9 13h6"/>
-                        <path d="M9 17h6"/>
-                    </svg>
-
+            @if($isVerifCompleted && $isProfileCompleted)
+                <div class="action-item" style="background:#f8fafc; border:1px dashed #cbd5e1;">
+                    <div class="action-icon" style="background:#dcfce7; color:#16a34a;">
+                        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 6L9 17l-5-5"></path>
+                        </svg>
+                    </div>
+                    <div class="action-main">
+                        <b>Account verified and up to date</b>
+                        <span>No urgent administrative actions required</span>
+                    </div>
+                    <span class="badge green">Verified</span>
                 </div>
-
-                <div class="action-copy">
-
-                    <strong>
-                        Upload BIR registration document
-                    </strong>
-
-                    <span>
-                        Requested for Account Profile
-                    </span>
-
-                </div>
-
-                <span class="priority due">
-                    Due soon
-                </span>
-
-                <svg class="row-arrow"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
-                    <path d="M5 12h13"/>
-                    <path d="m13 6 6 6-6 6"/>
-                </svg>
-
-            </a>
-
-
-            {{-- CALENDAR --}}
-            <a href="{{ url('/compliance') }}"
-               class="action-row">
-
-                <div class="action-symbol">
-
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <rect x="4" y="5" width="16" height="15" rx="2"/>
-                        <path d="M8 3v4"/>
-                        <path d="M16 3v4"/>
-                        <path d="M4 10h16"/>
-                        <path d="M8 14h.01"/>
-                        <path d="M12 14h.01"/>
-                        <path d="M16 14h.01"/>
-                    </svg>
-
-                </div>
-
-                <div class="action-copy">
-
-                    <strong>
-                        Review upcoming compliance deadlines
-                    </strong>
-
-                    <span>
-                        Scheduled updates require review
-                    </span>
-
-                </div>
-
-                <span class="priority due">
-                    Due soon
-                </span>
-
-                <svg class="row-arrow"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
-                    <path d="M5 12h13"/>
-                    <path d="m13 6 6 6-6 6"/>
-                </svg>
-
-            </a>
-
+            @endif
         </div>
-
-    </section>
-
+    </div>
 </div>
 
-
-{{-- =========================================================
-    WORKSPACE OVERVIEW
-========================================================== --}}
-<section class="workspace-section">
-
-    <div class="section-heading">
-
-        <div>
-
-            <div class="panel-eyebrow">
-                WORKSPACE OVERVIEW
-            </div>
-
-            <h2>
-                Your ORDO workspace
-            </h2>
-
-            <p>
-                Quick access to the services and modules available to your account.
-            </p>
-
-        </div>
-
-        <a href="{{ url('/settings/subscription-usage') }}"
-           class="view-all">
-
-            View access details
-
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M5 12h13"/>
-                <path d="m13 6 6 6-6 6"/>
+{{-- 4 STAT CARDS --}}
+<div class="grid-4" style="margin-bottom:18px">
+    {{-- COMPLIANCE --}}
+    <div class="card stat-card">
+        <div class="stat-icon">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M8 12l2.6 2.6L16.5 9"></path>
             </svg>
-
-        </a>
-
+        </div>
+        <div class="stat-value">2</div>
+        <div class="stat-label">Compliance · due soon</div>
+        <div class="stat-foot">14 active obligations</div>
     </div>
 
-
-    <div class="overview-grid">
-
-        {{-- ENTITY & GOVERNANCE --}}
-        <a href="{{ url('/entity-governance') }}"
-           class="overview-card">
-
-            <div class="overview-icon">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M3 21h18"/>
-                    <path d="M5 21V9l7-4 7 4v12"/>
-                    <path d="M9 21v-7h6v7"/>
-                    <path d="M8 11h.01"/>
-                    <path d="M16 11h.01"/>
-                </svg>
-            </div>
-
-            <div class="overview-content">
-
-                <div class="overview-top">
-
-                    <span>
-                        BUSINESS
-                    </span>
-
-                    <span class="available">
-                        30d
-                    </span>
-
-                </div>
-
-                <h3>
-                    Entity &amp; Governance
-                </h3>
-
-                <p>
-                    Manage governance records, entities and organizational information.
-                </p>
-
-            </div>
-
-            <span class="overview-arrow">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M5 12h13"/>
-                    <path d="m13 6 6 6-6 6"/>
-                </svg>
-            </span>
-
-        </a>
-
-
-        {{-- COMPLIANCE --}}
-        <a href="{{ url('/compliance') }}"
-           class="overview-card">
-
-            <div class="overview-icon">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <circle cx="12" cy="12" r="9"/>
-                    <path d="m8 12 2.5 2.5L16 9"/>
-                </svg>
-            </div>
-
-            <div class="overview-content">
-
-                <div class="overview-top">
-
-                    <span>
-                        BUSINESS
-                    </span>
-
-                    <span class="available">
-                        30d
-                    </span>
-
-                </div>
-
-                <h3>
-                    Compliance
-                </h3>
-
-                <p>
-                    Monitor compliance activities, requirements and deadlines.
-                </p>
-
-            </div>
-
-            <span class="overview-arrow">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M5 12h13"/>
-                    <path d="m13 6 6 6-6 6"/>
-                </svg>
-            </span>
-
-        </a>
-
-
-        {{-- FINANCE --}}
-        <a href="{{ url('/finance') }}"
-           class="overview-card">
-
-            <div class="overview-icon">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <rect x="3" y="5" width="18" height="14" rx="2"/>
-                    <path d="M7 9h10"/>
-                    <path d="M7 13h5"/>
-                    <path d="M7 16h3"/>
-                </svg>
-            </div>
-
-            <div class="overview-content">
-
-                <div class="overview-top">
-
-                    <span>
-                        BUSINESS
-                    </span>
-
-                    <span class="available">
-                        30d
-                    </span>
-
-                </div>
-
-                <h3>
-                    Finance
-                </h3>
-
-                <p>
-                    Organize financial information and maintain connected records.
-                </p>
-
-            </div>
-
-            <span class="overview-arrow">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M5 12h13"/>
-                    <path d="m13 6 6 6-6 6"/>
-                </svg>
-            </span>
-
-        </a>
-
-
-        {{-- HUMAN CAPITAL --}}
-        <a href="{{ url('/human-capital') }}"
-           class="overview-card">
-
-            <div class="overview-icon">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <circle cx="12" cy="8" r="3"/>
-                    <path d="M5 21c0-4 3-6 7-6s7 2 7 6"/>
-                    <path d="M18 11c1.7.3 2.7 1.2 3 2.8"/>
-                    <path d="M6 11c-1.7.3-2.7 1.2-3 2.8"/>
-                </svg>
-            </div>
-
-            <div class="overview-content">
-
-                <div class="overview-top">
-
-                    <span>
-                        BUSINESS
-                    </span>
-
-                    <span class="available">
-                        30d
-                    </span>
-
-                </div>
-
-                <h3>
-                    Human Capital
-                </h3>
-
-                <p>
-                    Manage people, organizational information and workforce records.
-                </p>
-
-            </div>
-
-            <span class="overview-arrow">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M5 12h13"/>
-                    <path d="m13 6 6 6-6 6"/>
-                </svg>
-            </span>
-
-        </a>
-
-
-        {{-- RECORDS --}}
-        <a href="{{ url('/records') }}"
-           class="overview-card">
-
-            <div class="overview-icon">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M6 3h12v18H6z"/>
-                    <path d="M9 7h6"/>
-                    <path d="M9 11h6"/>
-                    <path d="M9 15h4"/>
-                </svg>
-            </div>
-
-            <div class="overview-content">
-
-                <div class="overview-top">
-
-                    <span>
-                        BUSINESS
-                    </span>
-
-                    <span class="available">
-                        30d
-                    </span>
-
-                </div>
-
-                <h3>
-                    Records
-                </h3>
-
-                <p>
-                    Centralize important business records and documents.
-                </p>
-
-            </div>
-
-            <span class="overview-arrow">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M5 12h13"/>
-                    <path d="m13 6 6 6-6 6"/>
-                </svg>
-            </span>
-
-        </a>
-
-
-        {{-- TRANSMITTALS --}}
-        <a href="{{ url('/transmittals') }}"
-           class="overview-card">
-
-            <div class="overview-icon">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M4 12h13"/>
-                    <path d="m13 6 6 6-6 6"/>
-                    <path d="M19 6v12"/>
-                    <path d="M4 7v10"/>
-                </svg>
-            </div>
-
-            <div class="overview-content">
-
-                <div class="overview-top">
-
-                    <span>
-                        BUSINESS
-                    </span>
-
-                    <span class="available">
-                        30d
-                    </span>
-
-                </div>
-
-                <h3>
-                    Transmittals
-                </h3>
-
-                <p>
-                    Track document submissions and connected business transmittals.
-                </p>
-
-            </div>
-
-            <span class="overview-arrow">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M5 12h13"/>
-                    <path d="m13 6 6 6-6 6"/>
-                </svg>
-            </span>
-
-        </a>
-
+    {{-- FINANCE --}}
+    <div class="card stat-card">
+        <div class="stat-icon">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 7h16a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"></path>
+                <path d="M3 7l2-3h12l2 3"></path>
+                <path d="M16 12h5"></path>
+            </svg>
+        </div>
+        <div class="stat-value">₱225K</div>
+        <div class="stat-label">Finance · receivables</div>
+        <div class="stat-foot">₱65K due this week</div>
     </div>
 
-</section>
+    {{-- HUMAN CAPITAL --}}
+    <div class="card stat-card">
+        <div class="stat-icon">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"></path>
+            </svg>
+        </div>
+        <div class="stat-value">18</div>
+        <div class="stat-label">Human Capital · people</div>
+        <div class="stat-foot">2 currently on leave</div>
+    </div>
 
+    {{-- RECORDS --}}
+    <div class="card stat-card">
+        <div class="stat-icon">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h6l2 2h10v11a2 2 0 01-2 2H5a2 2 0 01-2-2V6z"></path>
+            </svg>
+        </div>
+        <div class="stat-value">45</div>
+        <div class="stat-label">Records · records</div>
+        <div class="stat-foot">220 MB storage used</div>
+    </div>
+</div>
 
-{{-- =========================================================
-    LOWER GRID
-========================================================== --}}
-<div class="lower-grid">
-
-    {{-- IMPORTANT DATES --}}
-    <section class="panel information-panel">
-
-        <div class="section-heading compact">
-
+{{-- MODULES & ANNOUNCEMENTS --}}
+<div class="grid-2" style="margin-bottom:18px">
+    {{-- MODULES --}}
+    <div class="card pad">
+        <div class="title-row">
             <div>
-
-                <div class="panel-eyebrow">
-                    UPCOMING
-                </div>
-
-                <h2>
-                    Important dates
-                </h2>
-
+                <div class="kicker">BUSINESS</div>
+                <h3>Your modules</h3>
             </div>
-
-            <a href="{{ url('/compliance') }}"
-               class="view-all">
-
-                View all
-
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M5 12h13"/>
-                    <path d="m13 6 6 6-6 6"/>
-                </svg>
-
-            </a>
-
+            <a href="{{ route('jkc.subscriptions') }}" class="btn ghost sm">Manage modules</a>
         </div>
+        <div class="module-grid townhall-module-grid">
+            @foreach($modulesList as $key => $m)
+                @php
+                    $isAcc = !empty($m['is_accessible']);
+                    $statusText = $m['access_label'] ?? ucfirst($m['status'] ?? 'trial');
+                    $badgeStyle = match($m['status'] ?? 'trial') {
+                        'trial' => 'color:#2563eb;',
+                        'free' => 'color:#16a34a;',
+                        'limited' => 'color:#d97706;',
+                        'active' => 'color:#059669;',
+                        default => 'color:#94a3b8;',
+                    };
+                @endphp
 
-
-        <div class="date-list">
-
-            <div class="date-row">
-
-                <div class="date-box attention">
-
-                    <strong>
-                        28
-                    </strong>
-
-                    <span>
-                        AUG
-                    </span>
-
-                </div>
-
-                <div class="date-content">
-
-                    <strong>
-                        Account verification
-                    </strong>
-
-                    <span>
-                        Required before access review
-                    </span>
-
-                </div>
-
-                <span class="date-status warning">
-                    Action needed
-                </span>
-
-            </div>
-
-
-            <div class="date-row">
-
-                <div class="date-box">
-
-                    <strong>
-                        31
-                    </strong>
-
-                    <span>
-                        AUG
-                    </span>
-
-                </div>
-
-                <div class="date-content">
-
-                    <strong>
-                        Compliance review
-                    </strong>
-
-                    <span>
-                        Business compliance workspace
-                    </span>
-
-                </div>
-
-                <span class="date-status">
-                    Upcoming
-                </span>
-
-            </div>
-
-
-            <div class="date-row">
-
-                <div class="date-box">
-
-                    <strong>
-                        18
-                    </strong>
-
-                    <span>
-                        SEP
-                    </span>
-
-                </div>
-
-                <div class="date-content">
-
-                    <strong>
-                        Trial access review
-                    </strong>
-
-                    <span>
-                        Review available Free Plan modules
-                    </span>
-
-                </div>
-
-                <span class="date-status">
-                    Upcoming
-                </span>
-
-            </div>
-
+                @if($isAcc)
+                    <a href="{{ route($key) }}" class="module-card">
+                        <div class="module-top">
+                            <div class="module-ico">
+                                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    {!! $moduleIcons[$key] ?? '' !!}
+                                </svg>
+                            </div>
+                            <div style="flex:1;">
+                                <h4>{{ $m['name'] }}</h4>
+                                <p>{{ $m['description'] }}</p>
+                            </div>
+                        </div>
+                        <div class="module-stats">
+                            <div><b>{{ $m['kpi'] }}</b>Overview</div>
+                            <div><b>{{ $m['kpi_sub'] }}</b>Status</div>
+                            <div><b style="{{ $badgeStyle }}">{{ $statusText }}</b>Access</div>
+                        </div>
+                    </a>
+                @else
+                    <div class="module-card locked" onclick="showLockedModule('{{ $key }}')">
+                        <div class="lock-overlay">
+                            <svg class="ico" viewBox="0 0 24 24" style="width:14px;height:14px;color:#94a3b8;" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0110 0v4"></path>
+                            </svg>
+                        </div>
+                        <div class="module-top">
+                            <div class="module-ico" style="background:#f1f5f9;border-color:#e2e8f0;color:#94a3b8;">
+                                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    {!! $moduleIcons[$key] ?? '' !!}
+                                </svg>
+                            </div>
+                            <div style="flex:1;">
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <h4 style="color:#64748b;">{{ $m['name'] }}</h4>
+                                    <span style="font-size:9px;background:#e2e8f0;color:#64748b;padding:1px 5px;border-radius:4px;font-weight:700;">LOCKED</span>
+                                </div>
+                                <p>{{ $m['description'] }}</p>
+                            </div>
+                        </div>
+                        <div class="module-stats">
+                            <div><b>{{ $m['kpi'] }}</b>Overview</div>
+                            <div><b>{{ $m['kpi_sub'] }}</b>Status</div>
+                            <div><b style="color:#ef4444;">🔒 Locked</b>Access</div>
+                        </div>
+                    </div>
+                @endif
+            @endforeach
         </div>
+    </div>
 
-    </section>
+    {{-- ANNOUNCEMENTS --}}
+    <div class="card pad">
+        <div class="title-row">
+            <div>
+                <div class="kicker">JK&amp;C</div>
+                <h3>Announcements</h3>
+            </div>
+            <a href="{{ route('jkc.announcements') }}" class="btn ghost sm">View all</a>
+        </div>
+        <div style="display:grid; gap:10px;">
+            <div class="announcement featured">
+                <div class="ann-meta">
+                    <span class="badge blue">Advisory</span>
+                    <span class="tiny muted">Aug 19, 2026</span>
+                </div>
+                <h4>Complete your ORDO Account Profile</h4>
+                <p>Your 30-day access is active. Complete verification to maintain eligible access and unlock your verification benefit.</p>
+                <div>
+                    <a href="{{ route('settings.verification') }}" class="btn secondary sm">Continue setup</a>
+                </div>
+            </div>
 
+            <div class="announcement">
+                <div class="ann-meta">
+                    <span class="badge purple">Regulatory Update</span>
+                    <span class="tiny muted">Aug 18, 2026</span>
+                </div>
+                <h4>August compliance and filing reminders</h4>
+                <p>Review upcoming client deadlines and filing requirements monitored through ORDO.</p>
+            </div>
+
+            <div class="announcement">
+                <div class="ann-meta">
+                    <span class="badge amber">Memo</span>
+                    <span class="tiny muted">Aug 5, 2026</span>
+                </div>
+                <h4>August 2026 Holiday Advisory</h4>
+                <p>Office schedule and service availability for the August holidays.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- UPCOMING & RECENT ACTIVITY --}}
+<div class="grid-2">
+    {{-- UPCOMING --}}
+    <div class="card pad">
+        <div class="title-row">
+            <h3>Upcoming</h3>
+            <button type="button" class="btn ghost sm">This month</button>
+        </div>
+        <div class="action-item" style="margin-bottom:8px">
+            <div class="action-icon date-badge">Aug 21</div>
+            <div class="action-main"><b>BIR filing deadline</b><span>Compliance</span></div>
+            <span class="badge red">High</span>
+        </div>
+        <div class="action-item" style="margin-bottom:8px">
+            <div class="action-icon date-badge">Aug 24</div>
+            <div class="action-main"><b>Board meeting</b><span>Entity &amp; Governance</span></div>
+            <span class="badge blue">Scheduled</span>
+        </div>
+        <div class="action-item" style="margin-bottom:8px">
+            <div class="action-icon date-badge">Aug 27</div>
+            <div class="action-main"><b>Invoice INV-2026-00125</b><span>Billing</span></div>
+            <span class="badge amber">₱15,000</span>
+        </div>
+        <div class="action-item" style="margin-bottom:8px">
+            <div class="action-icon date-badge">Sep 18</div>
+            <div class="action-main"><b>30-day access ends</b><span>Subscription</span></div>
+            <span class="badge purple">Review modules</span>
+        </div>
+    </div>
 
     {{-- RECENT ACTIVITY --}}
-    <section class="panel information-panel">
-
-        <div class="section-heading compact">
-
-            <div>
-
-                <div class="panel-eyebrow">
-                    RECENT ACTIVITY
-                </div>
-
-                <h2>
-                    Workspace activity
-                </h2>
-
-            </div>
-
-            <a href="{{ url('/jkc/activity-reports') }}"
-               class="view-all">
-
-                Activity reports
-
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M5 12h13"/>
-                    <path d="m13 6 6 6-6 6"/>
+    <div class="card pad">
+        <div class="title-row">
+            <h3>Recent activity</h3>
+            <a href="{{ route('jkc.activity-reports') }}" class="btn ghost sm">View activity</a>
+        </div>
+        <div class="action-item" style="border:0; border-bottom:1px solid var(--line); border-radius:0; padding:10px 0;">
+            <div class="action-icon">
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 6h6l2 2h10v11a2 2 0 01-2 2H5a2 2 0 01-2-2V6z"></path>
                 </svg>
-
-            </a>
-
+            </div>
+            <div class="action-main">
+                <b>Record uploaded</b>
+                <span>SEC Certificate of Registration</span>
+            </div>
+            <span class="tiny muted">10:42 AM</span>
         </div>
 
-
-        <div class="activity-list">
-
-            <div class="activity-row">
-
-                <div class="activity-icon blue">
-
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M4 6h16"/>
-                        <path d="M4 12h16"/>
-                        <path d="M4 18h10"/>
-                    </svg>
-
-                </div>
-
-                <div class="activity-content">
-
-                    <strong>
-                        Account profile opened
-                    </strong>
-
-                    <span>
-                        Today · Account Profile
-                    </span>
-
-                </div>
-
+        <div class="action-item" style="border:0; border-bottom:1px solid var(--line); border-radius:0; padding:10px 0;">
+            <div class="action-icon">
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M8 12l2.6 2.6L16.5 9"></path>
+                </svg>
             </div>
-
-
-            <div class="activity-row">
-
-                <div class="activity-icon green">
-
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="m6 12 4 4 8-8"/>
-                    </svg>
-
-                </div>
-
-                <div class="activity-content">
-
-                    <strong>
-                        Contact information confirmed
-                    </strong>
-
-                    <span>
-                        Today · Registration
-                    </span>
-
-                </div>
-
+            <div class="action-main">
+                <b>Compliance updated</b>
+                <span>BIR Form 1601-C marked Completed</span>
             </div>
-
-
-            <div class="activity-row">
-
-                <div class="activity-icon purple">
-
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M12 3v18"/>
-                        <path d="M3 12h18"/>
-                    </svg>
-
-                </div>
-
-                <div class="activity-content">
-
-                    <strong>
-                        30-day access activated
-                    </strong>
-
-                    <span>
-                        Today · ORDO Workspace
-                    </span>
-
-                </div>
-
-            </div>
-
+            <span class="tiny muted">Yesterday</span>
         </div>
 
-    </section>
-
-</div>
-
-
-{{-- =========================================================
-    QUICK ACCESS
-========================================================== --}}
-<section class="quick-section">
-
-    <div class="quick-heading">
-
-        <div class="panel-eyebrow">
-            QUICK ACCESS
+        <div class="action-item" style="border:0; border-bottom:1px solid var(--line); border-radius:0; padding:10px 0;">
+            <div class="action-icon">
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 12h4l2-6 4 12 2-6h6"></path>
+                </svg>
+            </div>
+            <div class="action-main">
+                <b>JK&amp;C activity logged</b>
+                <span>SEC follow-up and coordination</span>
+            </div>
+            <span class="tiny muted">Aug 17</span>
         </div>
 
-        <h2>
-            Manage your workspace
-        </h2>
-
+        <div class="action-item" style="border:0; padding:10px 0;">
+            <div class="action-icon">
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 2L11 13"></path>
+                    <path d="M22 2l-7 20-4-9-9-4 20-7z"></path>
+                </svg>
+            </div>
+            <div class="action-main">
+                <b>Transmittal acknowledged</b>
+                <span>TRN-00084 received</span>
+            </div>
+            <span class="tiny muted">Aug 16</span>
+        </div>
     </div>
-
-
-    <div class="quick-actions">
-
-        <a href="{{ url('/settings/account-profile') }}"
-           class="quick-action">
-
-            <span class="quick-icon">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M5 19 19 5"/>
-                    <path d="M9 5h10v10"/>
-                </svg>
-            </span>
-
-            <span>
-                Account Profile
-            </span>
-
-        </a>
-
-
-        <a href="{{ url('/settings/verification') }}"
-           class="quick-action">
-
-            <span class="quick-icon">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="m6 12 4 4 8-8"/>
-                </svg>
-            </span>
-
-            <span>
-                Verification
-            </span>
-
-        </a>
-
-
-        <a href="{{ url('/settings/subscription-usage') }}"
-           class="quick-action">
-
-            <span class="quick-icon">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <circle cx="12" cy="12" r="9"/>
-                    <path d="M12 7v5l3 2"/>
-                </svg>
-            </span>
-
-            <span>
-                Subscription &amp; Usage
-            </span>
-
-        </a>
-
-
-        <a href="{{ url('/jkc/support') }}"
-           class="quick-action">
-
-            <span class="quick-icon">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <circle cx="12" cy="12" r="9"/>
-                    <path d="M9.5 9a2.5 2.5 0 1 1 4.4 1.6c-.9 1-1.9 1.2-1.9 2.6"/>
-                    <path d="M12 17h.01"/>
-                </svg>
-            </span>
-
-            <span>
-                Get Support
-            </span>
-
-        </a>
-
-    </div>
-
-</section>
-
 </div>
-
-
-
 @endsection

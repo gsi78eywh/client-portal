@@ -1,544 +1,234 @@
-<aside class="ordo-sidebar" id="ordoSidebar">
+@php
+    $currentUser = auth()->user();
+    $userName = $currentUser?->name ?? 'John Abalde';
+    $parts = explode(' ', $userName);
+    $initials = count($parts) > 1 ? strtoupper(substr($parts[0], 0, 1) . substr(end($parts), 0, 1)) : strtoupper(substr($userName, 0, 2));
+    $userRole = 'Account Administrator';
 
-    {{-- =========================================================
-         BRAND
-    ========================================================== --}}
-    <div class="sidebar-brand">
+    $entitlement = app(\App\Services\EntitlementService::class);
+    $currentAccount = $currentUser?->currentAccount();
+    $moduleStatuses = [
+        'entity-governance' => $entitlement->getModuleStatus('entity-governance', $currentAccount),
+        'compliance' => $entitlement->getModuleStatus('compliance', $currentAccount),
+        'finance' => $entitlement->getModuleStatus('finance', $currentAccount),
+        'human-capital' => $entitlement->getModuleStatus('human-capital', $currentAccount),
+        'records' => $entitlement->getModuleStatus('records', $currentAccount),
+        'transmittals' => $entitlement->getModuleStatus('transmittals', $currentAccount),
+    ];
+    $formatStatusTag = function($status) {
+        return match($status) {
+            'trial' => '30d',
+            'free' => 'Free',
+            'limited' => 'Limited',
+            'active' => 'Active',
+            default => '🔒',
+        };
+    };
+@endphp
 
-        <div class="brand-logo">
-
-            <div class="logo-icon">
-                O
+<aside class="sidebar" id="sidebar">
+    <div class="side-head">
+        <a href="{{ route('town-hall') }}" style="display:flex;align-items:center;gap:11px;text-decoration:none;color:inherit;">
+            <div class="side-logo" aria-hidden="true" style="display:grid;place-items:center;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 20V4l16 16V4"/>
+                </svg>
             </div>
-
-            <div class="logo-text">
-
-                <h1>
-                    ORDO
-                </h1>
-
-                <span class="company-subtext">
-                    John Kelly
-                    <span class="ampersand">&amp;</span>
-                    Company
-                </span>
-
+            <div class="side-logo-text">
+                <b>NXT</b>
+                <span>by JK &amp; C</span>
             </div>
-
-        </div>
-
+        </a>
     </div>
 
-
-    {{-- =========================================================
-         SIDEBAR CONTENT
-    ========================================================== --}}
-    <div class="sidebar-content">
-
-
-        {{-- =====================================================
-             TOWN HALL
-        ====================================================== --}}
-        <div class="sidebar-section">
-
-            <a
-                href="/town-hall"
-                class="sidebar-link {{ request()->is('town-hall') ? 'active' : '' }}"
-            >
-
-                <svg
-                    class="sidebar-icon"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="2"
-                    stroke="currentColor"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
-                    />
+    <div class="side-scroll">
+        {{-- TOWN HALL --}}
+        <a href="{{ route('town-hall') }}" class="nav-item {{ request()->routeIs('town-hall') ? 'active' : '' }}">
+            <span class="nav-ico">
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 11.5L12 4l9 7.5"></path>
+                    <path d="M5.5 10.5V20h13v-9.5"></path>
+                    <path d="M9.5 20v-6h5v6"></path>
                 </svg>
+            </span>
+            <span class="nav-label">Town Hall</span>
+        </a>
 
-                <span>
-                    Town Hall
-                </span>
+        {{-- BUSINESS SECTION --}}
+        <div class="nav-section">BUSINESS</div>
 
-            </a>
-
-        </div>
-
-
-
-        {{-- =====================================================
-             BUSINESS MODULES
-        ====================================================== --}}
-        <div class="sidebar-section">
-
-            <div class="sidebar-section-title">
-                BUSINESS
-            </div>
-
-
-            {{-- ENTITY & GOVERNANCE --}}
-            <a
-                href="/entity-governance"
-                class="sidebar-link {{ request()->is('entity-governance') ? 'active' : '' }}"
-            >
-
-                <svg
-                    class="sidebar-icon"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="2"
-                    stroke="currentColor"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5s1.5 0 1.5 1.5-1.5 1.5-1.5 1.5H9m0-3v6m0-3h3m2.25-3h1.5s1.5 0 1.5 1.5-1.5 1.5-1.5 1.5H15m0-3v6m0-3h3"
-                    />
+        <a href="{{ $moduleStatuses['entity-governance'] !== 'locked' ? route('entity-governance') : 'javascript:void(0)' }}"
+           @if($moduleStatuses['entity-governance'] === 'locked') onclick="showLockedModule('entity-governance')" @endif
+           class="nav-item business-nav {{ request()->routeIs('entity-governance') ? 'active' : '' }} {{ $moduleStatuses['entity-governance'] === 'locked' ? 'locked-nav' : '' }}">
+            <span class="nav-ico">
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 21V5l8-3 8 3v16"></path>
+                    <path d="M8 8h2M14 8h2M8 12h2M14 12h2M8 16h2M14 16h2"></path>
+                    <path d="M2 21h20"></path>
                 </svg>
+            </span>
+            <span class="nav-label">Entity &amp; Governance</span>
+            <span class="count module-state {{ $moduleStatuses['entity-governance'] === 'locked' ? 'locked-state' : '' }} {{ $moduleStatuses['entity-governance'] === 'free' ? 'free-state' : '' }} {{ $moduleStatuses['entity-governance'] === 'active' ? 'active-state' : '' }}">{{ $formatStatusTag($moduleStatuses['entity-governance']) }}</span>
+        </a>
 
-                <span class="link-label">
-                    Entity &amp; Governance
-                </span>
-
-                <span class="badge-tag">
-                    30d
-                </span>
-
-            </a>
-
-
-            {{-- COMPLIANCE --}}
-            <a
-                href="/compliance"
-                class="sidebar-link {{ request()->is('compliance') ? 'active' : '' }}"
-            >
-
-                <svg
-                    class="sidebar-icon"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="2"
-                    stroke="currentColor"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
+        <a href="{{ $moduleStatuses['compliance'] !== 'locked' ? route('compliance') : 'javascript:void(0)' }}"
+           @if($moduleStatuses['compliance'] === 'locked') onclick="showLockedModule('compliance')" @endif
+           class="nav-item business-nav {{ request()->routeIs('compliance') ? 'active' : '' }} {{ $moduleStatuses['compliance'] === 'locked' ? 'locked-nav' : '' }}">
+            <span class="nav-ico">
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M8 12l2.6 2.6L16.5 9"></path>
                 </svg>
+            </span>
+            <span class="nav-label">Compliance</span>
+            <span class="count module-state {{ $moduleStatuses['compliance'] === 'locked' ? 'locked-state' : '' }} {{ $moduleStatuses['compliance'] === 'free' ? 'free-state' : '' }} {{ $moduleStatuses['compliance'] === 'active' ? 'active-state' : '' }}">{{ $formatStatusTag($moduleStatuses['compliance']) }}</span>
+        </a>
 
-                <span class="link-label">
-                    Compliance
-                </span>
-
-                <span class="badge-tag">
-                    30d
-                </span>
-
-            </a>
-
-
-            {{-- FINANCE --}}
-            <a
-                href="/finance"
-                class="sidebar-link {{ request()->is('finance') ? 'active' : '' }}"
-            >
-
-                <svg
-                    class="sidebar-icon"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="2"
-                    stroke="currentColor"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5h16.5A2.25 2.25 0 0 1 22.5 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25H3.75A2.25 2.25 0 0 1 1.5 17.25V6.75A2.25 2.25 0 0 1 3.75 4.5z"
-                    />
+        <a href="{{ $moduleStatuses['finance'] !== 'locked' ? route('finance') : 'javascript:void(0)' }}"
+           @if($moduleStatuses['finance'] === 'locked') onclick="showLockedModule('finance')" @endif
+           class="nav-item business-nav {{ request()->routeIs('finance') ? 'active' : '' }} {{ $moduleStatuses['finance'] === 'locked' ? 'locked-nav' : '' }}">
+            <span class="nav-ico">
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 7h16a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"></path>
+                    <path d="M3 7l2-3h12l2 3"></path>
+                    <path d="M16 12h5"></path>
                 </svg>
+            </span>
+            <span class="nav-label">Finance</span>
+            <span class="count module-state {{ $moduleStatuses['finance'] === 'locked' ? 'locked-state' : '' }} {{ $moduleStatuses['finance'] === 'free' ? 'free-state' : '' }} {{ $moduleStatuses['finance'] === 'active' ? 'active-state' : '' }}">{{ $formatStatusTag($moduleStatuses['finance']) }}</span>
+        </a>
 
-                <span class="link-label">
-                    Finance
-                </span>
-
-                <span class="badge-tag">
-                    30d
-                </span>
-
-            </a>
-
-
-            {{-- HUMAN CAPITAL --}}
-            <a
-                href="/human-capital"
-                class="sidebar-link {{ request()->is('human-capital') ? 'active' : '' }}"
-            >
-
-                <svg
-                    class="sidebar-icon"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="2"
-                    stroke="currentColor"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
-                    />
+        <a href="{{ $moduleStatuses['human-capital'] !== 'locked' ? route('human-capital') : 'javascript:void(0)' }}"
+           @if($moduleStatuses['human-capital'] === 'locked') onclick="showLockedModule('human-capital')" @endif
+           class="nav-item business-nav {{ request()->routeIs('human-capital') ? 'active' : '' }} {{ $moduleStatuses['human-capital'] === 'locked' ? 'locked-nav' : '' }}">
+            <span class="nav-ico">
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"></path>
                 </svg>
+            </span>
+            <span class="nav-label">Human Capital</span>
+            <span class="count module-state {{ $moduleStatuses['human-capital'] === 'locked' ? 'locked-state' : '' }} {{ $moduleStatuses['human-capital'] === 'free' ? 'free-state' : '' }} {{ $moduleStatuses['human-capital'] === 'active' ? 'active-state' : '' }}">{{ $formatStatusTag($moduleStatuses['human-capital']) }}</span>
+        </a>
 
-                <span class="link-label">
-                    Human Capital
-                </span>
-
-                <span class="badge-tag">
-                    30d
-                </span>
-
-            </a>
-
-
-            {{-- RECORDS --}}
-            <a
-                href="/records"
-                class="sidebar-link {{ request()->is('records') ? 'active' : '' }}"
-            >
-
-                <svg
-                    class="sidebar-icon"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="2"
-                    stroke="currentColor"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9z"
-                    />
+        <a href="{{ $moduleStatuses['records'] !== 'locked' ? route('records') : 'javascript:void(0)' }}"
+           @if($moduleStatuses['records'] === 'locked') onclick="showLockedModule('records')" @endif
+           class="nav-item business-nav {{ request()->routeIs('records') ? 'active' : '' }} {{ $moduleStatuses['records'] === 'locked' ? 'locked-nav' : '' }}">
+            <span class="nav-ico">
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 6h6l2 2h10v11a2 2 0 01-2 2H5a2 2 0 01-2-2V6z"></path>
                 </svg>
+            </span>
+            <span class="nav-label">Records</span>
+            <span class="count module-state {{ $moduleStatuses['records'] === 'locked' ? 'locked-state' : '' }} {{ $moduleStatuses['records'] === 'free' ? 'free-state' : '' }} {{ $moduleStatuses['records'] === 'active' ? 'active-state' : '' }}">{{ $formatStatusTag($moduleStatuses['records']) }}</span>
+        </a>
 
-                <span class="link-label">
-                    Records
-                </span>
-
-                <span class="badge-tag">
-                    30d
-                </span>
-
-            </a>
-
-
-            {{-- TRANSMITTALS --}}
-            <a
-                href="/transmittals"
-                class="sidebar-link {{ request()->is('transmittals') ? 'active' : '' }}"
-            >
-
-                <svg
-                    class="sidebar-icon"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="2"
-                    stroke="currentColor"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12zm0 0h7.5"
-                    />
+        <a href="{{ $moduleStatuses['transmittals'] !== 'locked' ? route('transmittals') : 'javascript:void(0)' }}"
+           @if($moduleStatuses['transmittals'] === 'locked') onclick="showLockedModule('transmittals')" @endif
+           class="nav-item business-nav {{ request()->routeIs('transmittals') ? 'active' : '' }} {{ $moduleStatuses['transmittals'] === 'locked' ? 'locked-nav' : '' }}">
+            <span class="nav-ico">
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 2L11 13"></path>
+                    <path d="M22 2l-7 20-4-9-9-4 20-7z"></path>
                 </svg>
+            </span>
+            <span class="nav-label">Transmittals</span>
+            <span class="count module-state {{ $moduleStatuses['transmittals'] === 'locked' ? 'locked-state' : '' }} {{ $moduleStatuses['transmittals'] === 'free' ? 'free-state' : '' }} {{ $moduleStatuses['transmittals'] === 'active' ? 'active-state' : '' }}">{{ $formatStatusTag($moduleStatuses['transmittals']) }}</span>
+        </a>
 
-                <span class="link-label">
-                    Transmittals
-                </span>
+        {{-- JK&C SECTION --}}
+        <div class="nav-section">JK&amp;C</div>
 
-                <span class="badge-tag">
-                    30d
-                </span>
-
-            </a>
-
-        </div>
-
-
-
-        {{-- =====================================================
-             JK&C
-        ====================================================== --}}
-        <div class="sidebar-section">
-
-            <div class="sidebar-section-title">
-                JK&amp;C
-            </div>
-
-
-            {{-- ANNOUNCEMENTS --}}
-            <a
-                href="/jkc/announcements"
-                class="sidebar-link {{ request()->is('jkc/announcements') ? 'active' : '' }}"
-            >
-
-                <svg
-                    class="sidebar-icon"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="2"
-                    stroke="currentColor"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 1 1 0-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 0 1-1.44-4.213m3.102-.001a21.13 21.13 0 0 0 2.21 2.21m-2.21-2.21c.82-.073 1.636-.18 2.443-.32m0 0a21.2 21.2 0 0 0 4.108-1.36M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"
-                    />
+        <a href="{{ route('jkc.announcements') }}" class="nav-item {{ request()->routeIs('jkc.announcements') ? 'active' : '' }}">
+            <span class="nav-ico">
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 11v2a2 2 0 002 2h2l9 4V5L7 9H5a2 2 0 00-2 2z"></path>
+                    <path d="M7 15l1.5 5"></path>
+                    <path d="M19 8a4 4 0 010 8"></path>
                 </svg>
+            </span>
+            <span class="nav-label">Announcements</span>
+            <span class="count">4</span>
+        </a>
 
-                <span class="link-label">
-                    Announcements
-                </span>
-
-                <span class="num-badge">
-                    4
-                </span>
-
-            </a>
-
-
-            {{-- ENGAGEMENTS --}}
-            <a
-                href="/jkc/engagements"
-                class="sidebar-link {{ request()->is('jkc/engagements') ? 'active' : '' }}"
-            >
-
-                <svg
-                    class="sidebar-icon"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="2"
-                    stroke="currentColor"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
-                    />
+        <a href="{{ route('jkc.engagements') }}" class="nav-item {{ request()->routeIs('jkc.engagements') ? 'active' : '' }}">
+            <span class="nav-ico">
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="7" width="18" height="13" rx="2"></rect>
+                    <path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2M3 12h18"></path>
                 </svg>
+            </span>
+            <span class="nav-label">Engagements</span>
+        </a>
 
-                <span class="link-label">
-                    Engagements
-                </span>
-
-            </a>
-
-
-            {{-- SUBSCRIPTIONS --}}
-            <a
-                href="/jkc/subscriptions"
-                class="sidebar-link {{ request()->is('jkc/subscriptions') ? 'active' : '' }}"
-            >
-
-                <svg
-                    class="sidebar-icon"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="2"
-                    stroke="currentColor"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5z"
-                    />
+        <a href="{{ route('jkc.subscriptions') }}" class="nav-item {{ request()->routeIs('jkc.subscriptions') ? 'active' : '' }}">
+            <span class="nav-ico">
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2l9 5-9 5-9-5 9-5z"></path>
+                    <path d="M3 12l9 5 9-5"></path>
+                    <path d="M3 17l9 5 9-5"></path>
                 </svg>
+            </span>
+            <span class="nav-label">Subscriptions</span>
+        </a>
 
-                <span class="link-label">
-                    Subscriptions
-                </span>
-
-            </a>
-
-
-            {{-- SUPPORT --}}
-            <a
-                href="/jkc/support"
-                class="sidebar-link {{ request()->is('jkc/support') ? 'active' : '' }}"
-            >
-
-                <svg
-                    class="sidebar-icon"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="2"
-                    stroke="currentColor"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M12 18h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"
-                    />
+        <a href="{{ route('jkc.support') }}" class="nav-item {{ request()->routeIs('jkc.support') ? 'active' : '' }}">
+            <span class="nav-ico">
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M5.6 5.6l4.3 4.3M14.1 14.1l4.3 4.3M18.4 5.6l-4.3 4.3M9.9 14.1l-4.3 4.3"></path>
                 </svg>
+            </span>
+            <span class="nav-label">Support</span>
+            <span class="count">2</span>
+        </a>
 
-                <span class="link-label">
-                    Support
-                </span>
-
-                <span class="num-badge">
-                    2
-                </span>
-
-            </a>
-
-
-            {{-- =================================================
-                 ACTIVITY & REPORTS
-            ================================================== --}}
-            <a
-                href="/jkc/activity-reports"
-                class="sidebar-link {{ request()->is('jkc/activity-reports') ? 'active' : '' }}"
-            >
-
-                <svg
-                    class="sidebar-icon"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="2"
-                    stroke="currentColor"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M9 17.25h6m-6-3h6m-6-3h6m2.25-6H6.75A2.25 2.25 0 0 0 4.5 7.5v9a2.25 2.25 0 0 0 2.25 2.25h10.5A2.25 2.25 0 0 0 19.5 16.5v-9a2.25 2.25 0 0 0-2.25-2.25Z"
-                    />
+        <a href="{{ route('jkc.activity-reports') }}" class="nav-item {{ request()->routeIs('jkc.activity-reports') ? 'active' : '' }}">
+            <span class="nav-ico">
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 12h4l2-6 4 12 2-6h6"></path>
                 </svg>
+            </span>
+            <span class="nav-label">Activity &amp; Reports</span>
+        </a>
 
-                <span class="link-label">
-                    Activity &amp; Reports
-                </span>
-
-            </a>
-
-
-            {{-- =================================================
-                 BILLING
-            ================================================== --}}
-            <a
-                href="/jkc/billing"
-                class="sidebar-link {{ request()->is('jkc/billing') ? 'active' : '' }}"
-            >
-
-                <svg
-                    class="sidebar-icon"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="2"
-                    stroke="currentColor"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5z"
-                    />
+        <a href="{{ route('jkc.billing') }}" class="nav-item {{ request()->routeIs('jkc.billing') ? 'active' : '' }}">
+            <span class="nav-ico">
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2z"></path>
+                    <path d="M9 7h6M9 11h6M9 15h4"></path>
                 </svg>
-
-                <span class="link-label">
-                    Billing
-                </span>
-
-            </a>
-
-        </div>
-
-
-
-        {{-- =====================================================
-             SETTINGS & USER PROFILE
-        ====================================================== --}}
-        <div class="sidebar-bottom">
-
-
-            {{-- SETTINGS --}}
-            <a
-                href="/settings"
-                class="sidebar-link {{ request()->is('settings*') ? 'active' : '' }}"
-            >
-
-                <svg
-                    class="sidebar-icon"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="2"
-                    stroke="currentColor"
-                >
-
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 0 1 0 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 0 1 0-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"
-                    />
-
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"
-                    />
-
-                </svg>
-
-                <span class="link-label">
-                    Settings
-                </span>
-
-            </a>
-
-
-
-            {{-- USER PROFILE --}}
-            <div class="user-profile-widget">
-
-                <div class="user-avatar">
-                    {{ strtoupper(substr(session('client.user.first_name', auth()->user()?->name ?? 'O'), 0, 1) . substr(session('client.user.last_name', ''), 0, 1)) ?: 'OR' }}
-                </div>
-
-                <div class="user-info">
-
-                    <span class="user-name">
-                        {{ session('client.user.first_name') ? (session('client.user.first_name') . ' ' . session('client.user.last_name')) : (auth()->user()?->name ?? 'Client') }}
-                    </span>
-
-                    <span class="user-role">
-                        {{ session('client.account.name') ?? 'Account Administrator' }}
-                    </span>
-
-                </div>
-
-            </div>
-
-
-        </div>
-
+            </span>
+            <span class="nav-label">Billing</span>
+        </a>
     </div>
 
+    {{-- BOTTOM AREA --}}
+    <div class="side-bottom">
+        <a href="{{ route('settings') }}" class="nav-item {{ request()->is('settings*') ? 'active' : '' }}">
+            <span class="nav-ico">
+                <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.6V21h-4v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 00.3-1.9A1.7 1.7 0 003 14H3v-4h.1a1.7 1.7 0 001.6-1 1.7 1.7 0 00-.3-1.9l-.1-.1L7 4.2l.1.1a1.7 1.7 0 001.9.3 1.7 1.7 0 001-1.6V3h4v.1a1.7 1.7 0 001 1.6 1.7 1.7 0 001.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 00-.3 1.9 1.7 1.7 0 001.6 1H21v4h-.1a1.7 1.7 0 00-1.5 1z"></path>
+                </svg>
+            </span>
+            <span class="nav-label">Settings</span>
+        </a>
+
+        <div class="userbox">
+            <div class="avatar" id="sidebarAvatar">{{ $initials }}</div>
+            <div style="min-width:0;flex:1">
+                <b id="sidebarUser" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $userName }}</b>
+                <span>{{ $userRole }}</span>
+            </div>
+            <form method="POST" action="{{ route('logout') }}" style="display:inline; margin:0;">
+                @csrf
+                <button type="submit" title="Sign out" style="background:none; border:0; padding:0; color:var(--muted); font-size:11px; cursor:pointer;" aria-label="Sign out">
+                    •••
+                </button>
+            </form>
+        </div>
+    </div>
 </aside>
-
-
-

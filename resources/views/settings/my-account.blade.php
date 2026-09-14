@@ -6,6 +6,25 @@
 
 @section('content')
 
+@php
+    $u = $user ?? auth()->user();
+    $p = $profile ?? $u?->profile;
+    $initials = 'US';
+    if ($u) {
+        $parts = explode(' ', $u->name);
+        $initials = count($parts) > 1 ? strtoupper(substr($parts[0], 0, 1) . substr(end($parts), 0, 1)) : strtoupper(substr($u->name, 0, 2));
+    }
+    $firstName = old('first_name', $p?->first_name ?? ($u ? explode(' ', $u->name)[0] : ''));
+    $middleName = old('middle_name', $p?->middle_name ?? '');
+    $lastName = old('last_name', $p?->last_name ?? ($u && count(explode(' ', $u->name)) > 1 ? explode(' ', $u->name)[1] : ''));
+    $suffix = old('suffix', $p?->suffix ?? '');
+    $dob = old('date_of_birth', $p?->date_of_birth ? \Carbon\Carbon::parse($p->date_of_birth)->format('Y-m-d') : '');
+    $mobile = old('mobile_number', $p?->mobile_number ?? '');
+    $country = old('country_region', $p?->country_region ?? 'Philippines');
+    $email = $u?->email ?? '';
+    $createdAt = $u?->created_at ? $u->created_at->format('F d, Y') : now()->format('F d, Y');
+@endphp
+
 <div class="main-content-container" style="max-width: 1000px; padding: 10px 0;">
 
     <!-- PAGE HEADER SECTION -->
@@ -23,6 +42,23 @@
             Your personal ORDO identity and sign-in details.
         </p>
     </div>
+
+    <!-- NOTIFICATIONS -->
+    @if(session('success') || session('status'))
+        <div style="margin-bottom: 18px; padding: 12px 14px; border-radius: 8px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; font-size: 13px; font-weight: 500;">
+            {{ session('success') ?? session('status') }}
+        </div>
+    @endif
+
+    @if($errors->any())
+        <div style="margin-bottom: 18px; padding: 12px 14px; border-radius: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; font-size: 13px;">
+            <ul style="margin: 0; padding-left: 18px;">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     <!-- MAIN TWO-COLUMN LAYOUT -->
     <div style="display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 24px; align-items: start;">
@@ -45,60 +81,68 @@
             <!-- USER PROFILE / AVATAR HEADER BANNER -->
             <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #f1f5f9;">
                 <div style="width: 56px; height: 56px; border-radius: 50%; background: #e0f2fe; color: #0f172a; font-weight: 700; font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                    JA
+                    {{ $initials }}
                 </div>
                 <div>
-                    <h3 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 2px 0;">John Abalde</h3>
-                    <div style="font-size: 13px; color: #64748b; margin-bottom: 4px;">john.abalde@jknc.io</div>
+                    <h3 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 2px 0;">{{ $u?->name ?? 'User' }}</h3>
+                    <div style="font-size: 13px; color: #64748b; margin-bottom: 4px;">{{ $email }}</div>
                     <span style="display: inline-flex; align-items: center; gap: 4px; background: #dcfce7; color: #15803d; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 12px;">
                         <span style="width: 6px; height: 6px; border-radius: 50%; background: #16a34a;"></span>
-                        Email verified
+                        Verified Identity
                     </span>
                 </div>
             </div>
 
             <!-- FORM FIELDS GRID -->
-            <form action="#" method="POST">
+            <form action="{{ route('settings.my-account.update') }}" method="POST">
                 @csrf
                 <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px;">
 
                     <!-- First name -->
                     <div>
-                        <label style="display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 6px;">First name</label>
-                        <input type="text" name="first_name" value="John" style="width: 100%; height: 42px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #0f172a; box-sizing: border-box;">
+                        <label style="display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 6px;">First name *</label>
+                        <input type="text" name="first_name" value="{{ $firstName }}" required style="width: 100%; height: 42px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #0f172a; box-sizing: border-box;">
                     </div>
 
                     <!-- Middle name -->
                     <div>
                         <label style="display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 6px;">Middle name</label>
-                        <input type="text" name="middle_name" value="Kelly" style="width: 100%; height: 42px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #0f172a; box-sizing: border-box;">
+                        <input type="text" name="middle_name" value="{{ $middleName }}" style="width: 100%; height: 42px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #0f172a; box-sizing: border-box;">
                     </div>
 
                     <!-- Last name -->
                     <div>
-                        <label style="display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 6px;">Last name</label>
-                        <input type="text" name="last_name" value="Abalde" style="width: 100%; height: 42px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #0f172a; box-sizing: border-box;">
+                        <label style="display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 6px;">Last name *</label>
+                        <input type="text" name="last_name" value="{{ $lastName }}" required style="width: 100%; height: 42px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #0f172a; box-sizing: border-box;">
+                    </div>
+
+                    <!-- Suffix -->
+                    <div>
+                        <label style="display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 6px;">Suffix</label>
+                        <input type="text" name="suffix" value="{{ $suffix }}" placeholder="e.g. Jr., III, CPA" style="width: 100%; height: 42px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #0f172a; box-sizing: border-box;">
                     </div>
 
                     <!-- Date of birth -->
                     <div>
                         <label style="display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 6px;">Date of birth</label>
-                        <input type="date" name="date_of_birth" value="1990-01-01" style="width: 100%; height: 42px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #0f172a; box-sizing: border-box;">
+                        <input type="date" name="date_of_birth" value="{{ $dob }}" style="width: 100%; height: 42px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #0f172a; box-sizing: border-box;">
                     </div>
 
                     <!-- Mobile number -->
                     <div>
                         <label style="display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 6px;">Mobile number</label>
-                        <input type="text" name="mobile_number" value="+63 917 000 0000" style="width: 100%; height: 42px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #0f172a; box-sizing: border-box;">
+                        <input type="text" name="mobile_number" value="{{ $mobile }}" placeholder="+63 900 000 0000" style="width: 100%; height: 42px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #0f172a; box-sizing: border-box;">
                     </div>
 
                     <!-- Country / Region -->
-                    <div>
+                    <div style="grid-column: 1 / -1;">
                         <label style="display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 6px;">Country / Region</label>
                         <select name="country_region" style="width: 100%; height: 42px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; background: #fff; color: #0f172a; box-sizing: border-box;">
-                            <option value="Philippines" selected>Philippines</option>
-                            <option value="United States">United States</option>
-                            <option value="Singapore">Singapore</option>
+                            <option value="Philippines" {{ $country === 'Philippines' ? 'selected' : '' }}>Philippines</option>
+                            <option value="United States" {{ $country === 'United States' ? 'selected' : '' }}>United States</option>
+                            <option value="Singapore" {{ $country === 'Singapore' ? 'selected' : '' }}>Singapore</option>
+                            <option value="Australia" {{ $country === 'Australia' ? 'selected' : '' }}>Australia</option>
+                            <option value="Other" {{ $country === 'Other' ? 'selected' : '' }}>Other</option>
                         </select>
                     </div>
 
@@ -132,17 +176,17 @@
 
                 <div style="padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
                     <div style="font-size: 12px; color: #64748b; margin-bottom: 2px;">Verification</div>
-                    <div style="font-size: 13.5px; font-weight: 600; color: #0f172a;">Pending</div>
+                    <div style="font-size: 13.5px; font-weight: 600; color: #0f172a;">{{ ucfirst(session('client.verification.status', 'In Progress')) }}</div>
                 </div>
 
                 <div style="padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
-                    <div style="font-size: 12px; color: #64748b; margin-bottom: 2px;">Subscription</div>
-                    <div style="font-size: 13.5px; font-weight: 600; color: #0f172a;">Free Plan</div>
+                    <div style="font-size: 12px; color: #64748b; margin-bottom: 2px;">Access Plan</div>
+                    <div style="font-size: 13.5px; font-weight: 600; color: #0284c7;">30-Day Free Access</div>
                 </div>
 
                 <div style="padding: 12px 0;">
                     <div style="font-size: 12px; color: #64748b; margin-bottom: 2px;">Account Created</div>
-                    <div style="font-size: 13.5px; font-weight: 600; color: #0f172a;">August 19, 2026</div>
+                    <div style="font-size: 13.5px; font-weight: 600; color: #0f172a;">{{ $createdAt }}</div>
                 </div>
             </div>
 

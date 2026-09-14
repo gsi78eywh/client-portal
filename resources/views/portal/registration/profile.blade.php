@@ -1,995 +1,186 @@
 @extends('layouts.registration')
 
-@section('title', 'Profile — Create your ORDO account')
+@section('title', 'Tell us about you — ORDO')
 
 @section('content')
-<div class="registration-page">
-        <div class="form-container">
+<div class="auth-panel wide" id="registerPanel">
+    <div class="kicker">CREATE YOUR ORDO ACCOUNT</div>
+    <h2>Tell us about you</h2>
+    <p>This creates your personal ORDO identity. We’ll ask about the account you’re creating in the next step.</p>
 
+    <div class="step-label">
+        <span>Step 1 of 7 &mdash; Personal Identity</span>
+        <span style="color: var(--blue);">14%</span>
+    </div>
+    <div class="wizard-top">
+        <span class="wizard-step on" aria-label="Step 1 active"></span>
+        <span class="wizard-step" aria-label="Step 2"></span>
+        <span class="wizard-step" aria-label="Step 3"></span>
+        <span class="wizard-step" aria-label="Step 4"></span>
+        <span class="wizard-step" aria-label="Step 5"></span>
+        <span class="wizard-step" aria-label="Step 6"></span>
+        <span class="wizard-step" aria-label="Step 7"></span>
+    </div>
 
-            {{-- =================================================
-                 FORM HEADER
-            ================================================== --}}
+    @if (session('success'))
+        <div class="alert alert-success" role="status">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            {{ session('success') }}
+        </div>
+    @endif
 
-            <span class="form-tag">
-                Create your ORDO account
-            </span>
+    @if ($errors->any())
+        <div class="alert alert-error" role="alert">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <ul style="margin:0;padding-left:18px;">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
+    <form method="POST" action="{{ route('profile.update') }}" id="profileForm" novalidate>
+        @csrf
 
-            <h1 class="form-title">
-                Tell us about you
-            </h1>
-
-
-            <p class="form-subtitle">
-                This creates your personal ORDO identity.
-                We’ll ask about the account you’re creating
-                in the next step.
-            </p>
-
-
-            {{-- =================================================
-                 PROGRESS
-            ================================================== --}}
-
-            <div
-                class="registration-progress"
-                aria-label="Registration progress: Step 3 of 6"
-            >
-
-                {{-- STEP 1 --}}
-
-                <span
-                    class="progress-segment completed"
-                    aria-label="Step 1 completed"
-                ></span>
-
-
-                {{-- STEP 2 --}}
-
-                <span
-                    class="progress-segment completed"
-                    aria-label="Step 2 completed"
-                ></span>
-
-
-                {{-- STEP 3 --}}
-
-                <span
-                    class="progress-segment active"
-                    aria-current="step"
-                    aria-label="Step 3 current"
-                ></span>
-
-
-                {{-- STEP 4 --}}
-
-                <span
-                    class="progress-segment"
-                    aria-hidden="true"
-                ></span>
-
-
-                {{-- STEP 5 --}}
-
-                <span
-                    class="progress-segment"
-                    aria-hidden="true"
-                ></span>
-
-
-                {{-- STEP 6 --}}
-
-                <span
-                    class="progress-segment"
-                    aria-hidden="true"
-                ></span>
-
+        <div class="form-grid">
+            {{-- First name --}}
+            <div>
+                <label class="label" for="first_name">First name <span style="color:var(--red)">*</span></label>
+                <input
+                    type="text"
+                    id="first_name"
+                    name="first_name"
+                    class="input @error('first_name') has-error @enderror"
+                    value="{{ old('first_name', $profile['first_name'] ?? '') }}"
+                    placeholder="John"
+                    required
+                >
+                @error('first_name')
+                    <span class="field-error">{{ $message }}</span>
+                @enderror
             </div>
 
-
-            {{-- =================================================
-                 SUCCESS MESSAGE
-            ================================================== --}}
-
-            @if (session('success'))
-
-                <div
-                    class="alert alert-success"
-                    role="status"
+            {{-- Middle name --}}
+            <div>
+                <label class="label" for="middle_name">Middle name</label>
+                <input
+                    type="text"
+                    id="middle_name"
+                    name="middle_name"
+                    class="input @error('middle_name') has-error @enderror"
+                    value="{{ old('middle_name', $profile['middle_name'] ?? '') }}"
+                    placeholder="Kelly"
                 >
+                @error('middle_name')
+                    <span class="field-error">{{ $message }}</span>
+                @enderror
+            </div>
 
-                    <span
-                        class="alert-icon"
-                        aria-hidden="true"
-                    >
-                        ✓
-                    </span>
-
-
-                    <span>
-                        {{ session('success') }}
-                    </span>
-
-                </div>
-
-            @endif
-
-
-            {{-- =================================================
-                 ERROR MESSAGE
-            ================================================== --}}
-
-            @if ($errors->any())
-
-                <div
-                    class="alert alert-error"
-                    role="alert"
+            {{-- Last name --}}
+            <div>
+                <label class="label" for="last_name">Last name <span style="color:var(--red)">*</span></label>
+                <input
+                    type="text"
+                    id="last_name"
+                    name="last_name"
+                    class="input @error('last_name') has-error @enderror"
+                    value="{{ old('last_name', $profile['last_name'] ?? '') }}"
+                    placeholder="Abalde"
+                    required
                 >
+                @error('last_name')
+                    <span class="field-error">{{ $message }}</span>
+                @enderror
+            </div>
 
-                    <span
-                        class="alert-icon"
-                        aria-hidden="true"
+            {{-- Suffix --}}
+            <div>
+                <label class="label" for="suffix">Suffix (if applicable)</label>
+                <input
+                    type="text"
+                    id="suffix"
+                    name="suffix"
+                    class="input @error('suffix') has-error @enderror"
+                    value="{{ old('suffix', $profile['suffix'] ?? '') }}"
+                    placeholder="Jr., III, etc. (Optional)"
+                >
+                @error('suffix')
+                    <span class="field-error">{{ $message }}</span>
+                @enderror
+            </div>
+
+            {{-- Date of birth --}}
+            <div>
+                <label class="label" for="date_of_birth">Date of birth <span style="color:var(--red)">*</span></label>
+                <input
+                    type="date"
+                    id="date_of_birth"
+                    name="date_of_birth"
+                    class="input @error('date_of_birth') has-error @enderror"
+                    value="{{ old('date_of_birth', $profile['date_of_birth'] ?? '') }}"
+                    required
+                >
+                @error('date_of_birth')
+                    <span class="field-error">{{ $message }}</span>
+                @enderror
+            </div>
+
+            {{-- Gender --}}
+            <div>
+                <label class="label" for="gender">Gender</label>
+                <div class="select-wrapper">
+                    <select
+                        id="gender"
+                        name="gender"
+                        class="select @error('gender') has-error @enderror"
                     >
-                        !
-                    </span>
-
-
-                    <div>
-
-                        <strong>
-                            Please check the following:
-                        </strong>
-
-
-                        <ul>
-
-                            @foreach ($errors->all() as $error)
-
-                                <li>
-                                    {{ $error }}
-                                </li>
-
-                            @endforeach
-
-                        </ul>
-
-                    </div>
-
+                        <option value="prefer_not_to_say" {{ old('gender', $profile['gender'] ?? 'prefer_not_to_say') === 'prefer_not_to_say' ? 'selected' : '' }}>Prefer not to say</option>
+                        <option value="male" {{ old('gender', $profile['gender'] ?? '') === 'male' ? 'selected' : '' }}>Male</option>
+                        <option value="female" {{ old('gender', $profile['gender'] ?? '') === 'female' ? 'selected' : '' }}>Female</option>
+                        <option value="other" {{ old('gender', $profile['gender'] ?? '') === 'other' ? 'selected' : '' }}>Other</option>
+                    </select>
                 </div>
-
-            @endif
-
-
-            {{-- =================================================
-                 PROFILE FORM
-            ================================================== --}}
-
-            <form
-                method="POST"
-                action="{{ route('profile.update') }}"
-                class="registration-form"
-                id="profileForm"
-            >
-
-                @csrf
-
-
-                <div class="form-grid">
-
-
-                    {{-- =================================================
-                         FIRST NAME
-                    ================================================== --}}
-
-                    <div class="form-group">
-
-                        <label
-                            for="first_name"
-                            class="form-label"
-                        >
-
-                            First name
-
-                            <span class="required">
-                                *
-                            </span>
-
-                        </label>
-
-
-                        <div class="input-wrapper has-icon">
-
-                            <span
-                                class="field-icon"
-                                aria-hidden="true"
-                            >
-
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="1.8"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-
-                                    <circle
-                                        cx="12"
-                                        cy="8"
-                                        r="3.5"
-                                    ></circle>
-
-                                    <path
-                                        d="M5 20c.8-3.3 3.1-5 7-5s6.2 1.7 7 5"
-                                    ></path>
-
-                                </svg>
-
-                            </span>
-
-
-                            <input
-                                type="text"
-                                id="first_name"
-                                name="first_name"
-                                class="form-input @error('first_name') is-invalid @enderror"
-                                value="{{ old('first_name') }}"
-                                placeholder="Enter your first name"
-                                autocomplete="given-name"
-                                maxlength="100"
-                                required
-                            >
-
-                        </div>
-
-
-                        @error('first_name')
-
-                            <span class="field-error">
-                                {{ $message }}
-                            </span>
-
-                        @enderror
-
-                    </div>
-
-
-                    {{-- =================================================
-                         MIDDLE NAME
-                    ================================================== --}}
-
-                    <div class="form-group">
-
-                        <label
-                            for="middle_name"
-                            class="form-label"
-                        >
-                            Middle name
-                        </label>
-
-
-                        <div class="input-wrapper has-icon">
-
-                            <span
-                                class="field-icon"
-                                aria-hidden="true"
-                            >
-
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="1.8"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-
-                                    <circle
-                                        cx="12"
-                                        cy="8"
-                                        r="3.5"
-                                    ></circle>
-
-                                    <path
-                                        d="M5 20c.8-3.3 3.1-5 7-5s6.2 1.7 7 5"
-                                    ></path>
-
-                                </svg>
-
-                            </span>
-
-
-                            <input
-                                type="text"
-                                id="middle_name"
-                                name="middle_name"
-                                class="form-input @error('middle_name') is-invalid @enderror"
-                                value="{{ old('middle_name') }}"
-                                placeholder="Enter your middle name"
-                                autocomplete="additional-name"
-                                maxlength="100"
-                            >
-
-                        </div>
-
-
-                        @error('middle_name')
-
-                            <span class="field-error">
-                                {{ $message }}
-                            </span>
-
-                        @enderror
-
-                    </div>
-
-
-                    {{-- =================================================
-                         LAST NAME
-                    ================================================== --}}
-
-                    <div class="form-group">
-
-                        <label
-                            for="last_name"
-                            class="form-label"
-                        >
-
-                            Last name
-
-                            <span class="required">
-                                *
-                            </span>
-
-                        </label>
-
-
-                        <div class="input-wrapper has-icon">
-
-                            <span
-                                class="field-icon"
-                                aria-hidden="true"
-                            >
-
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="1.8"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-
-                                    <circle
-                                        cx="12"
-                                        cy="8"
-                                        r="3.5"
-                                    ></circle>
-
-                                    <path
-                                        d="M5 20c.8-3.3 3.1-5 7-5s6.2 1.7 7 5"
-                                    ></path>
-
-                                </svg>
-
-                            </span>
-
-
-                            <input
-                                type="text"
-                                id="last_name"
-                                name="last_name"
-                                class="form-input @error('last_name') is-invalid @enderror"
-                                value="{{ old('last_name') }}"
-                                placeholder="Enter your last name"
-                                autocomplete="family-name"
-                                maxlength="100"
-                                required
-                            >
-
-                        </div>
-
-
-                        @error('last_name')
-
-                            <span class="field-error">
-                                {{ $message }}
-                            </span>
-
-                        @enderror
-
-                    </div>
-
-
-                    {{-- =================================================
-                         SUFFIX
-                    ================================================== --}}
-
-                    <div class="form-group">
-
-                        <label
-                            for="suffix"
-                            class="form-label"
-                        >
-                            Suffix
-                        </label>
-
-
-                        <div class="select-wrapper has-icon">
-
-                            <span
-                                class="field-icon"
-                                aria-hidden="true"
-                            >
-
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="1.8"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-
-                                    <path d="M6 4v16"></path>
-
-                                    <path
-                                        d="M6 4h7a4 4 0 0 1 0 8H6"
-                                    ></path>
-
-                                </svg>
-
-                            </span>
-
-
-                            <select
-                                id="suffix"
-                                name="suffix"
-                                class="form-select @error('suffix') is-invalid @enderror"
-                            >
-
-                                <option value="">
-                                    Optional
-                                </option>
-
-
-                                <option
-                                    value="Jr."
-                                    {{ old('suffix') === 'Jr.' ? 'selected' : '' }}
-                                >
-                                    Jr.
-                                </option>
-
-
-                                <option
-                                    value="Sr."
-                                    {{ old('suffix') === 'Sr.' ? 'selected' : '' }}
-                                >
-                                    Sr.
-                                </option>
-
-
-                                <option
-                                    value="II"
-                                    {{ old('suffix') === 'II' ? 'selected' : '' }}
-                                >
-                                    II
-                                </option>
-
-
-                                <option
-                                    value="III"
-                                    {{ old('suffix') === 'III' ? 'selected' : '' }}
-                                >
-                                    III
-                                </option>
-
-
-                                <option
-                                    value="IV"
-                                    {{ old('suffix') === 'IV' ? 'selected' : '' }}
-                                >
-                                    IV
-                                </option>
-
-                            </select>
-
-                        </div>
-
-
-                        @error('suffix')
-
-                            <span class="field-error">
-                                {{ $message }}
-                            </span>
-
-                        @enderror
-
-                    </div>
-
-
-                    {{-- =================================================
-                         DATE OF BIRTH
-                    ================================================== --}}
-
-                    <div class="form-group">
-
-                        <label
-                            for="date_of_birth"
-                            class="form-label"
-                        >
-
-                            Date of birth
-
-                            <span class="required">
-                                *
-                            </span>
-
-                        </label>
-
-
-                        <div class="input-wrapper has-icon">
-
-                            <span
-                                class="field-icon"
-                                aria-hidden="true"
-                            >
-
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="1.8"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-
-                                    <rect
-                                        x="3"
-                                        y="5"
-                                        width="18"
-                                        height="16"
-                                        rx="2"
-                                    ></rect>
-
-                                    <path d="M16 3v4"></path>
-
-                                    <path d="M8 3v4"></path>
-
-                                    <path d="M3 10h18"></path>
-
-                                </svg>
-
-                            </span>
-
-
-                            <input
-                                type="date"
-                                id="date_of_birth"
-                                name="date_of_birth"
-                                class="form-input @error('date_of_birth') is-invalid @enderror"
-                                value="{{ old('date_of_birth') }}"
-                                autocomplete="bday"
-                                required
-                            >
-
-                        </div>
-
-
-                        @error('date_of_birth')
-
-                            <span class="field-error">
-                                {{ $message }}
-                            </span>
-
-                        @enderror
-
-                    </div>
-
-
-                    {{-- =================================================
-                         GENDER
-                    ================================================== --}}
-
-                    <div class="form-group">
-
-                        <label
-                            for="gender"
-                            class="form-label"
-                        >
-                            Gender
-                        </label>
-
-
-                        <div class="select-wrapper has-icon">
-
-                            <span
-                                class="field-icon"
-                                aria-hidden="true"
-                            >
-
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="1.8"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-
-                                    <circle
-                                        cx="9"
-                                        cy="8"
-                                        r="3"
-                                    ></circle>
-
-                                    <path
-                                        d="M3.5 20c.7-3.1 2.5-4.7 5.5-4.7s4.8 1.6 5.5 4.7"
-                                    ></path>
-
-                                    <path d="M16 5h4"></path>
-
-                                    <path d="M18 3v4"></path>
-
-                                </svg>
-
-                            </span>
-
-
-                            <select
-                                id="gender"
-                                name="gender"
-                                class="form-select @error('gender') is-invalid @enderror"
-                            >
-
-                                <option
-                                    value=""
-                                    {{ old('gender', '') === '' ? 'selected' : '' }}
-                                >
-                                    Prefer not to say
-                                </option>
-
-
-                                <option
-                                    value="male"
-                                    {{ old('gender') === 'male' ? 'selected' : '' }}
-                                >
-                                    Male
-                                </option>
-
-
-                                <option
-                                    value="female"
-                                    {{ old('gender') === 'female' ? 'selected' : '' }}
-                                >
-                                    Female
-                                </option>
-
-
-                                <option
-                                    value="other"
-                                    {{ old('gender') === 'other' ? 'selected' : '' }}
-                                >
-                                    Other
-                                </option>
-
-                            </select>
-
-                        </div>
-
-
-                        @error('gender')
-
-                            <span class="field-error">
-                                {{ $message }}
-                            </span>
-
-                        @enderror
-
-                    </div>
-
-
-                    {{-- =================================================
-                         COUNTRY / REGION
-                    ================================================== --}}
-
-                    <div class="form-group form-group-full">
-
-                        <label
-                            for="country"
-                            class="form-label"
-                        >
-
-                            Country / Region
-
-                            <span class="required">
-                                *
-                            </span>
-
-                        </label>
-
-
-                        <div class="select-wrapper has-icon">
-
-                            <span
-                                class="field-icon"
-                                aria-hidden="true"
-                            >
-
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="1.8"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-
-                                    <circle
-                                        cx="12"
-                                        cy="12"
-                                        r="9"
-                                    ></circle>
-
-                                    <path d="M3 12h18"></path>
-
-                                    <path
-                                        d="M12 3c2.4 2.5 3.6 5.5 3.6 9s-1.2 6.5-3.6 9"
-                                    ></path>
-
-                                    <path
-                                        d="M12 3c-2.4 2.5-3.6 5.5-3.6 9s1.2 6.5 3.6 9"
-                                    ></path>
-
-                                </svg>
-
-                            </span>
-
-
-                            <select
-                                id="country"
-                                name="country"
-                                class="form-select @error('country') is-invalid @enderror"
-                                required
-                            >
-
-                                <option value="">
-                                    Select country / region
-                                </option>
-
-
-                                <option
-                                    value="Philippines"
-                                    {{ old('country', 'Philippines') === 'Philippines' ? 'selected' : '' }}
-                                >
-                                    Philippines
-                                </option>
-
-
-                                <option
-                                    value="Australia"
-                                    {{ old('country') === 'Australia' ? 'selected' : '' }}
-                                >
-                                    Australia
-                                </option>
-
-
-                                <option
-                                    value="New Zealand"
-                                    {{ old('country') === 'New Zealand' ? 'selected' : '' }}
-                                >
-                                    New Zealand
-                                </option>
-
-
-                                <option
-                                    value="Singapore"
-                                    {{ old('country') === 'Singapore' ? 'selected' : '' }}
-                                >
-                                    Singapore
-                                </option>
-
-                            </select>
-
-                        </div>
-
-
-                        @error('country')
-
-                            <span class="field-error">
-                                {{ $message }}
-                            </span>
-
-                        @enderror
-
-                    </div>
-
-
-                </div>
-
-
-                {{-- =================================================
-                     ACTIONS
-                ================================================== --}}
-
-                <div class="registration-actions">
-
-
-                    {{-- BACK --}}
-
-                    <a
-                        href="{{ url('/register/information') }}"
-                        class="back-button"
+                @error('gender')
+                    <span class="field-error">{{ $message }}</span>
+                @enderror
+            </div>
+
+            {{-- Country / Region (Full width) --}}
+            <div class="full">
+                <label class="label" for="country">Country / Region <span style="color:var(--red)">*</span></label>
+                <div class="select-wrapper">
+                    <select
+                        id="country"
+                        name="country"
+                        class="select @error('country') has-error @enderror"
+                        required
                     >
-
-                        <span
-                            class="button-icon"
-                            aria-hidden="true"
-                        >
-
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-
-                                <path d="M19 12H5"></path>
-
-                                <path d="m12 19-7-7 7-7"></path>
-
-                            </svg>
-
-                        </span>
-
-
-                        <span>
-                            Back
-                        </span>
-
-                    </a>
-
-
-                    {{-- CONTINUE --}}
-
-                    <button
-                        type="submit"
-                        class="continue-button"
-                        id="continueButton"
-                    >
-
-                        <span>
-                            Continue
-                        </span>
-
-
-                        <span
-                            class="button-arrow"
-                            aria-hidden="true"
-                        >
-
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-
-                                <path d="M5 12h14"></path>
-
-                                <path d="m13 6 6 6-6 6"></path>
-
-                            </svg>
-
-                        </span>
-
-                    </button>
-
-
+                        <option value="">Select country / region</option>
+                        @php
+                            $currentCountry = old('country', $profile['country'] ?? 'Philippines');
+                            $countryList = config('countries', ['Philippines', 'Australia', 'New Zealand', 'Singapore', 'United States', 'United Kingdom', 'Canada']);
+                        @endphp
+                        @foreach ($countryList as $c)
+                            <option value="{{ $c }}" {{ $currentCountry === $c ? 'selected' : '' }}>{{ $c }}</option>
+                        @endforeach
+                    </select>
                 </div>
-
-
-            </form>
-
-
+                @error('country')
+                    <span class="field-error">{{ $message }}</span>
+                @enderror
+            </div>
         </div>
+
+        {{-- Actions --}}
+        <div class="flex between center" style="margin-top: 28px;">
+            <a href="{{ route('login') }}" class="btn ghost">
+                Back to Sign in
+            </a>
+            <button type="submit" class="btn primary">
+                Continue &rarr;
+            </button>
+        </div>
+    </form>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-
-    document.addEventListener(
-        'DOMContentLoaded',
-        function () {
-
-            const form =
-                document.getElementById('profileForm');
-
-            const button =
-                document.getElementById('continueButton');
-
-
-            if (!form || !button) {
-
-                return;
-            }
-
-
-            form.addEventListener(
-                'submit',
-                function () {
-
-                    if (button.disabled) {
-
-                        return;
-                    }
-
-
-                    /*
-                     * Let the browser perform its normal
-                     * HTML5 required-field validation first.
-                     */
-
-                    if (!form.checkValidity()) {
-
-                        return;
-                    }
-
-
-                    button.disabled = true;
-
-
-                    button.innerHTML = `
-
-                        <span>
-                            Continuing...
-                        </span>
-
-                        <span
-                            class="button-arrow"
-                            aria-hidden="true"
-                        >
-
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-
-                                <path d="M5 12h14"></path>
-
-                                <path d="m13 6 6 6-6 6"></path>
-
-                            </svg>
-
-                        </span>
-
-                    `;
-
-                }
-            );
-
-        }
-    );
-
-</script>
-@endpush

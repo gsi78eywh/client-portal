@@ -15,7 +15,17 @@ class Account extends Model
     protected $fillable = [
         'account_number',
         'status',
+        'account_type',
+        'verification_status',
     ];
+
+    /**
+     * Account display name attribute.
+     */
+    public function getNameAttribute(): ?string
+    {
+        return $this->profile?->legal_name ?? $this->profile?->trade_name ?? $this->account_number;
+    }
 
     /**
      * Users who have access to this ORDO account.
@@ -68,5 +78,53 @@ class Account extends Model
     public function activities(): HasMany
     {
         return $this->hasMany(ClientActivity::class);
+    }
+
+    /**
+     * Compliance records and regulatory tracking items.
+     */
+    public function complianceRecords(): HasMany
+    {
+        return $this->hasMany(ComplianceRecord::class);
+    }
+
+    /**
+     * Entity & governance records under this account.
+     */
+    public function governanceRecords(): HasMany
+    {
+        return $this->hasMany(GovernanceRecord::class);
+    }
+
+    /**
+     * Finance records, transactions, receivables, and payables under this account.
+     */
+    public function financeRecords(): HasMany
+    {
+        return $this->hasMany(FinanceRecord::class);
+    }
+
+    /**
+     * Document records uploaded and organized under this account.
+     */
+    public function documentRecords(): HasMany
+    {
+        return $this->hasMany(DocumentRecord::class);
+    }
+
+    /**
+     * Transmittal records tracked and managed under this account.
+     */
+    public function transmittalRecords(): HasMany
+    {
+        return $this->hasMany(TransmittalRecord::class);
+    }
+
+    /**
+     * Human capital records (employees, HR records, attendance, leave) under this account.
+     */
+    public function humanCapitalRecords(): HasMany
+    {
+        return $this->hasMany(HumanCapitalRecord::class);
     }
 }

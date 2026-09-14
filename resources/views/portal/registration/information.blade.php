@@ -3,6 +3,11 @@
 @section('title', 'Account information — ORDO')
 
 @section('content')
+@php
+    /*
+    |--------------------------------------------------------------------------
+    | ACCOUNT TYPE SELECTION
+    |--------------------------------------------------------------------------
     |
     | Step 2 stores the selected account type in:
     |
